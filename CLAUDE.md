@@ -136,8 +136,8 @@ Use these consistently.
 | **Draft** | Post-match choice of upgrades, players, or perks |
 | **Trait** | A modifier attached to a footballer that alters sim behaviour |
 | **Tactic** | Crew-wide instruction affecting positioning and decision-making |
-| **Card** *(rename pending — see open questions)* | A passive, run-scoped modifier gained via a Draft; active for the rest of the season, lost when it ends. Unlike a Trait, not necessarily tied to one footballer |
-| **Power-up** | An active, in-match manager ability, triggered live rather than drafted passively. Separate resource from the passive Card above |
+| **Perk** | A passive, run-scoped modifier gained via a Draft; active for the rest of the season, lost when it ends. Unlike a Trait, not necessarily tied to one footballer |
+| **Power-up** | An active, in-match manager ability, triggered live rather than drafted passively. Separate resource from Perks above |
 | **Player Card** | A footballer pulled from a pack, with a rarity tier (Gray/Blue/Purple/Orange/Diamond) — see section 9 |
 
 ## 8. Current status
@@ -220,7 +220,7 @@ out explicitly.
   Implemented in `renderer.ts` as a wobbly polygon shaped by a hash of the
   player's id, so each blob's wobble is stable across renders.
 - **Cup loss ends the run outright**, not just the cup. Crew (the five
-  players) and "most progress" carry over into the next run; in-season Cards
+  players) and "most progress" carry over into the next run; in-season Perks
   (see below) earned during that run do not.
 - **Cup shape:** 5 rounds per cup. Rounds 1-4 are two-legged aggregate ties
   (Champions League style), each leg played on a different team's home
@@ -251,9 +251,11 @@ out explicitly.
   instead. Section 7's Run definition should be reworded to match — not yet
   done, wording depends on what a milestone reward actually is (see open
   questions).
-- **Cards and power-ups are two separate systems**, not the same thing under
-  two names (an earlier log entry conflated them — corrected here):
-  - **Card:** a passive, run-scoped modifier picked via Draft between
+- **Perks and power-ups are two separate systems**, not the same thing under
+  two names (an earlier log entry conflated them — corrected here). *(This
+  entry originally named the passive modifier "Card"; renamed to "Perk" to
+  stop colliding with Player Card, see below.)*
+  - **Perk:** a passive, run-scoped modifier picked via Draft between
     matches (e.g. +tackle win%, +shot accuracy, +stamina, up to "wilder"
     non-stat effects). Stays active for the rest of the season, lost when
     the season ends. Distinct from a **Trait**, which is permanent and tied
@@ -287,7 +289,7 @@ out explicitly.
   targeted-discovery channel.
   **Scope flag:** four parallel acquisition systems (packs, market, academy,
   scouting) is a lot of surface for a solo hobby project still in the
-  skeleton phase, on top of everything else already sketched (Cards,
+  skeleton phase, on top of everything else already sketched (Perks,
   Power-ups, Traits, Tactics, hazards, fouls, two-legged ties...).
   Recommend designing and building packs first — it's the one with the
   clearest shape — and treating the other three as a later pass once packs
@@ -335,24 +337,12 @@ section 9.
   (currency, a permanent unlock, a starting bonus next season) are both
   still undefined. Section 7's Run definition needs rewording to match once
   this lands.
-- **Power-ups need their own design pass.** Confirmed separate from Cards
+- **Power-ups need their own design pass.** Confirmed separate from Perks
   (section 9) and confirmed as manager-triggered live abilities (e.g. "2x
   speed for 10 seconds"), but: how are they earned/equipped before a match,
   how many available per match, limited-use or cooldown-based, does
   triggering one pause the sim clock or run alongside it, and how does it
   relate to substitutions (same "manager button" category, or different)?
-- **Naming collision, still open — one more round needed.** Pack pulls are
-  now settled as **Player Card**, which is unambiguous. What's still
-  unsettled is the *other* one: the passive run-scoped modifier (+tackle
-  win%, +stamina, etc, drafted between matches) is currently still named
-  **Card** in the vocab table, which reads as a collision with Player Card.
-  I'd previously (sloppily) called that passive modifier "the power-up" when
-  asking about a rename — but **Power-up** is already the settled name for
-  a *different*, separate thing (the live, in-match manager ability, e.g.
-  "2x speed for 10 seconds"). Renaming the passive modifier to "Power-up"
-  too would recreate the same one-name-two-things problem, just shifted.
-  Need a distinct third name for the passive modifier — **Perk** is my
-  suggestion, but any name that isn't Card or Power-up works.
 - **Cup access:** what gates which cups are available — results, standing,
   something else — and is the choice between cups a real risk/reward tradeoff
   (harder cup, better draft pool)?
