@@ -5,21 +5,32 @@ import type { MatchState } from "../sim/types";
 // units directly.
 const PX_PER_METRE = 32;
 
+// The sim models goals on the x=0 / x=width walls (see physics.ts) with no
+// notion of screen orientation — it doesn't know or care how it's drawn.
+// The game is portrait, phone-first, so the render layer rotates the court
+// a quarter turn: sim x (the goal-to-goal axis) maps to screen y, and sim y
+// (the side-to-side axis) maps to screen x. Goals end up at the top and
+// bottom of the canvas instead of the sides.
+function toScreen(simX: number, simY: number): { x: number; y: number } {
+  return { x: simY * PX_PER_METRE, y: simX * PX_PER_METRE };
+}
+
 export function resizeCanvasToCourt(
   canvas: HTMLCanvasElement,
   state: MatchState
 ): void {
-  canvas.width = state.config.court.width * PX_PER_METRE;
-  canvas.height = state.config.court.height * PX_PER_METRE;
+  const { court } = state.config;
+  canvas.width = court.height * PX_PER_METRE;
+  canvas.height = court.width * PX_PER_METRE;
 }
 
 export function render(ctx: CanvasRenderingContext2D, state: MatchState): void {
   const { court } = state.config;
-  const w = court.width * PX_PER_METRE;
-  const h = court.height * PX_PER_METRE;
+  const canvasW = court.height * PX_PER_METRE;
+  const canvasH = court.width * PX_PER_METRE;
 
   ctx.fillStyle = "#1c3d2e";
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillRect(0, 0, canvasW, canvasH);
 
   drawWalls(ctx, state);
   drawPlayers(ctx, state);
@@ -28,8 +39,8 @@ export function render(ctx: CanvasRenderingContext2D, state: MatchState): void {
 
 function drawWalls(ctx: CanvasRenderingContext2D, state: MatchState): void {
   const { court } = state.config;
-  const w = court.width * PX_PER_METRE;
-  const h = court.height * PX_PER_METRE;
+  const canvasW = court.height * PX_PER_METRE;
+  const canvasH = court.width * PX_PER_METRE;
   const { min: goalMin, max: goalMax } = goalYRange(court);
   const goalMinPx = goalMin * PX_PER_METRE;
   const goalMaxPx = goalMax * PX_PER_METRE;
@@ -37,42 +48,42 @@ function drawWalls(ctx: CanvasRenderingContext2D, state: MatchState): void {
   ctx.strokeStyle = "#e8e8e8";
   ctx.lineWidth = 4;
 
+  // Side walls (sim y = 0 / y = height) are the untouched long edges —
+  // they land on the canvas's left and right after rotation.
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.lineTo(w, 0);
-  ctx.moveTo(0, h);
-  ctx.lineTo(w, h);
+  ctx.lineTo(0, canvasH);
+  ctx.moveTo(canvasW, 0);
+  ctx.lineTo(canvasW, canvasH);
+
+  // End walls (sim x = 0 / x = width) carry the goal openings — they land
+  // on the canvas's top and bottom.
   ctx.moveTo(0, 0);
-  ctx.lineTo(0, goalMinPx);
-  ctx.moveTo(0, goalMaxPx);
-  ctx.lineTo(0, h);
-  ctx.moveTo(w, 0);
-  ctx.lineTo(w, goalMinPx);
-  ctx.moveTo(w, goalMaxPx);
-  ctx.lineTo(w, h);
+  ctx.lineTo(goalMinPx, 0);
+  ctx.moveTo(goalMaxPx, 0);
+  ctx.lineTo(canvasW, 0);
+  ctx.moveTo(0, canvasH);
+  ctx.lineTo(goalMinPx, canvasH);
+  ctx.moveTo(goalMaxPx, canvasH);
+  ctx.lineTo(canvasW, canvasH);
   ctx.stroke();
 
   ctx.strokeStyle = "#f4d35e";
   ctx.beginPath();
-  ctx.moveTo(0, goalMinPx);
-  ctx.lineTo(0, goalMaxPx);
-  ctx.moveTo(w, goalMinPx);
-  ctx.lineTo(w, goalMaxPx);
+  ctx.moveTo(goalMinPx, 0);
+  ctx.lineTo(goalMaxPx, 0);
+  ctx.moveTo(goalMinPx, canvasH);
+  ctx.lineTo(goalMaxPx, canvasH);
   ctx.stroke();
 }
 
 function drawPlayers(ctx: CanvasRenderingContext2D, state: MatchState): void {
   for (const player of state.players) {
+    const { x, y } = toScreen(player.x, player.y);
     ctx.fillStyle = player.team === "home" ? "#4fa8ff" : "#ff6b6b";
     ctx.strokeStyle = player.team === "home" ? "#2a6bc9" : "#c9403f";
     ctx.lineWidth = 2;
-    drawBlob(
-      ctx,
-      player.x * PX_PER_METRE,
-      player.y * PX_PER_METRE,
-      11,
-      hashString(player.id)
-    );
+    drawBlob(ctx, x, y, 11, hashString(player.id));
   }
 }
 
@@ -129,8 +140,9 @@ function drawBlob(
 
 function drawBall(ctx: CanvasRenderingContext2D, state: MatchState): void {
   const { ball } = state;
+  const { x, y } = toScreen(ball.x, ball.y);
   ctx.beginPath();
   ctx.fillStyle = "#ffffff";
-  ctx.arc(ball.x * PX_PER_METRE, ball.y * PX_PER_METRE, ball.radius * PX_PER_METRE, 0, Math.PI * 2);
+  ctx.arc(x, y, ball.radius * PX_PER_METRE, 0, Math.PI * 2);
   ctx.fill();
 }
