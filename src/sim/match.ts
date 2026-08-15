@@ -1,0 +1,92 @@
+import { createRng, nextRange, type RngState } from "./rng";
+import { stepBall } from "./physics";
+import type { BallState, MatchConfig, MatchState, PlayerState, TeamId } from "./types";
+
+const BALL_RADIUS = 0.11; // metres, roughly a size-5 football
+const KICKOFF_SPEED_RANGE: [number, number] = [3, 6]; // metres/second
+
+function spawnPlayers(config: MatchConfig): PlayerState[] {
+  const players: PlayerState[] = [];
+  const teams: TeamId[] = ["home", "away"];
+  for (const team of teams) {
+    const goalX = team === "home" ? 1 : config.court.width - 1;
+    const spacing = config.court.height / (config.teamSize + 1);
+    for (let i = 0; i < config.teamSize; i++) {
+      players.push({
+        id: `${team}-${i}`,
+        team,
+        x: goalX,
+        y: spacing * (i + 1),
+      });
+    }
+  }
+  return players;
+}
+
+function kickoffBall(
+  rngState: RngState,
+  config: MatchConfig
+): [ball: BallState, next: RngState] {
+  const [angle, s1] = nextRange(rngState, 0, Math.PI * 2);
+  const [speed, s2] = nextRange(s1, ...KICKOFF_SPEED_RANGE);
+  const ball: BallState = {
+    x: config.court.width / 2,
+    y: config.court.height / 2,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    radius: BALL_RADIUS,
+  };
+  return [ball, s2];
+}
+
+export function createMatch(config: MatchConfig): MatchState {
+  const rngState = createRng(config.seed);
+  const [ball, nextRngState] = kickoffBall(rngState, config);
+  return {
+    config,
+    tick: 0,
+    elapsedSeconds: 0,
+    ball,
+    players: spawnPlayers(config),
+    score: { home: 0, away: 0 },
+    rngState: nextRngState,
+  };
+}
+
+// Advances the match by exactly one fixed tick. Sim logic never reads the
+// wall clock — dt is always 1 / tickRate.
+export function tickMatch(state: MatchState): MatchState {
+  const dt = 1 / state.config.tickRate;
+  const { ball, scoredBy } = stepBall(state.ball, state.config.court, dt);
+
+  const score = scoredBy
+    ? { ...state.score, [scoredBy]: state.score[scoredBy] + 1 }
+    : state.score;
+
+  const [nextBall, nextRngState] = scoredBy
+    ? kickoffBall(state.rngState, state.config)
+    : [ball, state.rngState];
+
+  return {
+    ...state,
+    tick: state.tick + 1,
+    elapsedSeconds: state.elapsedSeconds + dt,
+    ball: nextBall,
+    score,
+    rngState: nextRngState,
+  };
+}
+
+// Runs the match to completion with no renderer attached, proving sim and
+// render are fully decoupled. Used for instant-result simulation.
+export function simulateMatch(
+  config: MatchConfig,
+  durationSeconds: number
+): MatchState {
+  let state = createMatch(config);
+  const totalTicks = Math.floor(durationSeconds * config.tickRate);
+  for (let i = 0; i < totalTicks; i++) {
+    state = tickMatch(state);
+  }
+  return state;
+}

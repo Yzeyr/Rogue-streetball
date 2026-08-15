@@ -1,0 +1,65 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d1512;
+  font-family: system-ui, sans-serif;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  width: 100%;
+  max-width: 720px;
+}
+
+#hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  color: #e8e8e8;
+}
+
+#score {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#controls {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #445;
+  background: #223;
+  color: #e8e8e8;
+  font-size: 0.9rem;
+}
+
+button:active {
+  background: #334;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  touch-action: none;
+}
