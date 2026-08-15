@@ -3,7 +3,8 @@ import type { CourtConfig, PlayerState, TeamId } from "./types";
 
 const SHOOT_SPEED = 15; // m/s
 const PASS_SPEED = 9; // m/s
-const DRIBBLE_SPEED = 4.5; // m/s
+const DRIBBLE_SPEED = 5.5; // m/s
+const DRIBBLE_PUSH = 2.5; // metres — a short shove forward, not a kick upfield
 
 // Soft falloff distances, not hard cutoffs — the ball is shootable from
 // anywhere (section 4 rule), these just make closer options score higher.
@@ -36,9 +37,12 @@ function velocityToward(from: Vector, to: Vector, speed: number): { vx: number; 
   return { vx: (dx / dist) * speed, vy: (dy / dist) * speed };
 }
 
+export type TouchAction = "shoot" | "pass" | "dribble";
+
 export interface TouchDecision {
   vx: number;
   vy: number;
+  action: TouchAction;
   next: RngState;
 }
 
@@ -88,15 +92,25 @@ export function decideTouch(
   if (shootScore >= (bestPass?.score ?? -Infinity) && shootScore >= dribbleScore) {
     const spread = (1 - player.attributes.shooting / 100) * 1.5; // metres of aim error
     const aimY = clamp(goal.y + aimJitter * spread, 0, court.height);
-    return { ...velocityToward(player, { x: goal.x, y: aimY }, SHOOT_SPEED), next: s };
+    return { ...velocityToward(player, { x: goal.x, y: aimY }, SHOOT_SPEED), action: "shoot", next: s };
   }
 
   if (bestPass && bestPass.score >= dribbleScore) {
     const spread = (1 - player.attributes.passing / 100) * 1.0;
     const target = { x: bestPass.mate.x + aimJitter * spread, y: bestPass.mate.y + aimJitter * spread };
-    return { ...velocityToward(player, target, PASS_SPEED), next: s };
+    return { ...velocityToward(player, target, PASS_SPEED), action: "pass", next: s };
   }
 
-  const dribbleTarget = { x: goal.x, y: player.y + aimJitter * 2 };
-  return { ...velocityToward(player, dribbleTarget, DRIBBLE_SPEED), next: s };
+  // A short shove toward goal, not a kick to the far end — dribbling is a
+  // carry, not a repeated long pass to nobody. movement.ts is what makes
+  // this actually read as carrying: it lets whoever's dribbling (ball.
+  // carrierId) run toward goal instead of snapping back to their formation
+  // slot, so the same player keeps catching back up to the ball they just
+  // pushed instead of abandoning it.
+  const pushX = player.team === "home" ? player.x + DRIBBLE_PUSH : player.x - DRIBBLE_PUSH;
+  const dribbleTarget = {
+    x: clamp(pushX, 0, court.width),
+    y: clamp(player.y + aimJitter * 1.5, 0, court.height),
+  };
+  return { ...velocityToward(player, dribbleTarget, DRIBBLE_SPEED), action: "dribble", next: s };
 }

@@ -23,6 +23,12 @@ export interface BallState {
   // who a nearby opponent is pressing/tackling. Null when the ball is
   // fully free (cooldown elapsed, e.g. right after kickoff). See touches.ts.
   possessionTeam: TeamId | null;
+  // The player currently dribbling, if any — set when a touch's chosen
+  // action is "dribble", cleared on a shot/pass (the ball's been released
+  // on purpose) or when nobody's carrying (loose ball). movement.ts reads
+  // this to let the carrier run the ball forward instead of holding their
+  // formation slot. See touches.ts / decision.ts.
+  carrierId: string | null;
 }
 
 // Off-ball shape only — not a tactical formation system yet, just enough

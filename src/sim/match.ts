@@ -55,6 +55,7 @@ function kickoffBall(
     radius: BALL_RADIUS,
     touchCooldown: 0,
     possessionTeam: null,
+    carrierId: null,
   };
   return [ball, s2];
 }

@@ -467,6 +467,31 @@ them land wrong, nothing here is precious.
   doesn't push out under any tactic trigger. That's the already-settled
   two-layer rush-keeper design (tactic trigger + trait) waiting on the
   Tactic system existing at all. Not needed for this pass.
+- **Dribbling and player separation, fixed.** Playtesting the artifact
+  build surfaced two real bugs, not polish: dribbling looked like ping
+  pong (a "dribble" fired the ball almost all the way to the opponent's
+  goal in one kick, and player movement had no idea a touch had happened
+  — it just kept seeking the static formation slot, so nobody ever
+  visibly carried the ball), and players from either team could end up
+  standing in the exact same spot (each player's target was computed
+  independently from role + ball position, with nothing stopping two
+  targets from coinciding and nothing pushing players apart if they did).
+  - **Carrying:** `decision.ts`'s dribble branch now pushes the ball only
+    ~2.5m forward, not at goal. `BallState` gains `carrierId` (the
+    currently-dribbling player, cleared on any shot/pass); `movement.ts`
+    lets that one player run at the opponent's goal instead of holding
+    formation while carrying, so the same player keeps catching back up
+    to the ball they just nudged. Verified headlessly: longest sustained
+    carry across a match went from effectively nothing to 4.5 real
+    seconds, with a realistic mix of short and long spells.
+  - **Separation:** `movement.ts` adds a same-team-and-opponents-agnostic
+    separation pass after movement — a few relaxation iterations (cheap
+    at 10 players) push any two players closer than 0.75m apart back
+    toward that minimum. Verified headlessly: worst-case distance between
+    any two players across a full match went from 0m (exact overlap) to
+    0.75m.
+  - Re-ran the 8-seed scoring sweep after both fixes: still a healthy
+    football range (0-8 goals a side), no regression from the keeper fix.
 
 ## 10. Open questions
 

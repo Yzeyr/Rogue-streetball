@@ -58,9 +58,16 @@ export function resolveTouch(
   rngState: RngState
 ): TouchResult {
   const teammates = players.filter((p) => p.team === toucher.team && p.id !== toucher.id);
-  const { vx, vy, next } = decideTouch(toucher, teammates, court, rngState);
+  const { vx, vy, action, next } = decideTouch(toucher, teammates, court, rngState);
   return {
-    ball: { ...ball, vx, vy, touchCooldown: TOUCH_COOLDOWN_TICKS, possessionTeam: toucher.team },
+    ball: {
+      ...ball,
+      vx,
+      vy,
+      touchCooldown: TOUCH_COOLDOWN_TICKS,
+      possessionTeam: toucher.team,
+      carrierId: action === "dribble" ? toucher.id : null,
+    },
     rngState: next,
   };
 }
