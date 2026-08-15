@@ -63,11 +63,68 @@ function drawWalls(ctx: CanvasRenderingContext2D, state: MatchState): void {
 
 function drawPlayers(ctx: CanvasRenderingContext2D, state: MatchState): void {
   for (const player of state.players) {
-    ctx.beginPath();
     ctx.fillStyle = player.team === "home" ? "#4fa8ff" : "#ff6b6b";
-    ctx.arc(player.x * PX_PER_METRE, player.y * PX_PER_METRE, 10, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.strokeStyle = player.team === "home" ? "#2a6bc9" : "#c9403f";
+    ctx.lineWidth = 2;
+    drawBlob(
+      ctx,
+      player.x * PX_PER_METRE,
+      player.y * PX_PER_METRE,
+      11,
+      hashString(player.id)
+    );
   }
+}
+
+// Deterministic string hash so a player's blob shape is stable across
+// renders (same id → same wobble) without the render layer needing any
+// per-tick randomness of its own.
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
+  }
+  return h >>> 0;
+}
+
+// Rough, hand-drawn-looking "blob" silhouette — a wobbly circle rather
+// than a clean dot, per the game's placeholder art direction.
+function drawBlob(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  baseRadius: number,
+  seed: number
+): void {
+  const pointCount = 7;
+  const points: { x: number; y: number }[] = [];
+  let h = seed;
+  for (let i = 0; i < pointCount; i++) {
+    h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
+    const variance = 0.7 + (h % 1000) / 1000 / 2; // 0.7x - 1.2x radius
+    const angle = (i / pointCount) * Math.PI * 2;
+    points.push({
+      x: cx + Math.cos(angle) * baseRadius * variance,
+      y: cy + Math.sin(angle) * baseRadius * variance,
+    });
+  }
+
+  const midpoint = (a: { x: number; y: number }, b: { x: number; y: number }) => ({
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2,
+  });
+
+  const start = midpoint(points[pointCount - 1], points[0]);
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  for (let i = 0; i < pointCount; i++) {
+    const next = points[(i + 1) % pointCount];
+    const mid = midpoint(points[i], next);
+    ctx.quadraticCurveTo(points[i].x, points[i].y, mid.x, mid.y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
 }
 
 function drawBall(ctx: CanvasRenderingContext2D, state: MatchState): void {

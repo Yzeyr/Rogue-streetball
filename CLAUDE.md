@@ -201,35 +201,76 @@ out explicitly.
 - **Sim/render separation, seeded determinism, fixed timestep** — see section 5.
 - **Team size and court geometry stay parameterised** even though 5-a-side is
   settled, so the engine can be tuned and tested at other sizes.
+- **Match viewing:** real-time playback, a 3x fast-forward, or skip straight to
+  the result. A match takes roughly 2 real minutes to watch at normal speed.
+- **In-match player agency: manager mode, not spectate-only.** The player can
+  pause, adjust tactics, and substitute players during a match. Resolves the
+  "player agency" open question in favour of active management over the
+  course of a match, not just between them.
+- **Court hazards are in scope.** Specific hazard types (pillars, slopes, wet
+  patches, etc.) are still undecided.
+- **Art direction: rough "blob" player shapes**, not clean dots and not
+  detailed sprites — a deliberately crude, hand-drawn-looking silhouette.
+  Implemented in `renderer.ts` as a wobbly polygon shaped by a hash of the
+  player's id, so each blob's wobble is stable across renders.
+- **Cup loss ends the run outright**, not just the cup. Crew (the five
+  players) and "most progress" carry over into the next run; in-season
+  draft/upgrade picks earned during that run do not. *(Read-back pending —
+  see open questions: need to confirm this is what "cards" meant here, since
+  the word is also used below for the separate, unrelated foul-cards idea.)*
+- **Cup shape, partially settled:** 5 rounds per cup. Rounds 1-4 are
+  two-legged aggregate ties (Champions-League style); round 5 is a single
+  "boss" match. Pure knockout — no group stage. **Not yet locked — conflicts
+  with the season match-count budget above. See open questions.**
+- **Fouls exist; no disciplinary cards** (no bookings, no sendings-off).
+  **Foul consequence mechanic not yet decided — see open questions**, because
+  a normal free-kick restart conflicts with the no-stoppage rule.
 
 ## 10. Open questions
 
 Unresolved. Do not build against these until they're decided and moved to
 section 9.
 
-- **Cup shape:** matches per cup, and whether each cup has a group stage before
-  knockout or is pure sudden death.
-- **Loss condition:** losing a cup clearly can't end the season outright, or
-  most runs die in the first cup. So what does a lost cup cost, and what
-  eventually ends the run?
+- **Cup match-count budget conflict.** 4 two-legged ties + 1 boss match = 9
+  matches for a single cup. The decision log already commits to 10-15 total
+  matches per *season*, across several cups. Those don't fit together — pick
+  one: shrink the cup (fewer legs, fewer rounds), raise the season budget, or
+  accept that a season is now essentially one cup.
+- **Two-legged tie-break.** If aggregate score is level after both legs, what
+  breaks it? Leaning toward sudden-death (next goal wins) over a penalty
+  shootout, since it keeps the "ball always live" rule intact — but unconfirmed.
+- **Does each leg use a different court?** Two-legged ties only feel distinct
+  from "play the same match twice" if something changes between legs — e.g.
+  each leg played on that team's home court, tying it to the court-is-content
+  pillar. Unconfirmed.
+- **"Cards" read-back.** Confirm the loss-condition "cards" (in-season
+  draft/upgrade picks, lost on run end) is a different concept from the
+  fouls "cards" (disciplinary bookings, which were explicitly ruled out) —
+  same word, two unrelated meanings, want to make sure that's right before
+  it's load-bearing.
+- **Foul consequence mechanic.** No disciplinary cards is settled, but what
+  actually *happens* on a foul isn't. A free-kick restart breaks the
+  no-stoppage rule (section 4, pillar 3). Does the sim instead do something
+  live — a stumble/knockdown that doesn't stop play, a possession turnover,
+  an advantage-style rule — or something else?
+- **Manager tactics/subs scope.** Confirmed in scope, but undesigned: what do
+  "tactics" actually expose (formation shape, pressing intensity, tempo,
+  something else)? Are subs limited or unlimited, on a cooldown, rolling like
+  futsal? Does pausing freeze the sim tick outright, or just the camera while
+  sim time keeps advancing? Needs its own design pass.
 - **Cup access:** what gates which cups are available — results, standing,
   something else — and is the choice between cups a real risk/reward tradeoff
   (harder cup, better draft pool)?
 - **Power play triggers:** the exact set of trigger conditions the player can
   choose from (never / losing late / losing at all / always — or something
   else), and whether the trigger set is itself draftable content.
-- **Fouls and physicality:** are there fouls at all? cards? or is contact just
-  part of street play?
-- **Match length:** real minutes per match, and can the player skip to result?
-- **Player agency during a match:** pause and re-tactic? limited "manager
-  interventions"? or purely spectate?
 - **Player model:** how many attributes, and how directly do they drive sim
   decisions?
-- **Court hazards:** do courts get active hazards (pillars, slopes, wet
-  concrete) or is variety purely geometric?
-- **Meta-progression:** does anything carry between runs, or is it pure
-  knowledge-based?
-- **Art direction:** dots and shapes, or actual sprites?
+- **Which court hazards, specifically** — pillars, slopes, wet patches,
+  something else — and how each affects ball/player physics.
+- **Meta-progression specifics.** Confirmed something carries between runs
+  (crew, "most progress"); not yet specified what "most progress" concretely
+  includes.
 - **Orientation:** portrait or landscape.
 
 ## 11. How to start a session
