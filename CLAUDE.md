@@ -291,6 +291,33 @@ out explicitly.
   (epic) → Orange (legendary) → Diamond/sparkly (icon). This is the rarity
   of an individual player-card pulled from a pack — separate from a pack's
   own tier (Bronze/Silver/...).
+- **Pack tier gates the rarity ceiling** (confirmed — resolves the earlier
+  "gate vs weight" open question in favour of gate):
+  - **Bronze** → ceiling Epic. Possible pulls: Gray, Blue, Purple.
+  - **Silver** → ceiling Legendary. Possible pulls: Gray, Blue, Purple, Orange.
+  - **Gold** → can reach Icon, at roughly 1-in-1000 odds. Possible pulls: all
+    five tiers.
+  Exact odds within a tier (e.g. Bronze's Gray:Blue:Purple split) are a later
+  balance detail, not blocking.
+- **Rarity grants both higher potential stats and a specialised trait**
+  (confirmed — resolves the earlier "stat power vs. trait novelty" open
+  question: it's both, not either/or). A higher-rarity pull rolls from a
+  higher stat-potential band *and* is more likely to carry a trait that
+  makes it exceptional at one specific thing — shooting, ball retention
+  under pressure, passing, etc.
+  **Calling out explicitly, not smoothing over:** this embraces real power
+  progression (a rarer pull is a genuinely better player, not just a
+  different one), which is a firmer stance than the "rarity = build
+  variety, not raw power" lean I'd floated last round — that lean is
+  superseded. The traits themselves still fit section 4's rule (expressed
+  as "better at X," same shape as the wall-retention/tight-space examples
+  already in that section), so no conflict there. The thing worth watching
+  as the player pool grows via packs/market/academy/scouting: pillar 2 wants
+  every crew member to stay a name-and-remember pick, and a growing pool
+  will naturally bench the weaker early pulls — presumably that's the
+  intended squad-building loop (more players unlocked over time than the 5
+  that start), not a problem, but worth confirming that's the intent rather
+  than assuming.
 
 ## 10. Open questions
 
@@ -317,20 +344,6 @@ section 9.
   metaphor is clearly the player-facing one (e.g. rename the power-up to
   **Perk** or **Boost**, keep **Card** for the player-collectible object).
   Need a pick.
-- **Does pack tier gate player rarity, or just weight it?** E.g. can a
-  Bronze pack ever roll a Diamond icon (rare but possible), or are the top
-  rarities exclusive to higher pack tiers? Shapes the whole progression
-  curve — a gate makes pack tier the hard ceiling on what you can get, a
-  weight makes it just better odds.
-- **What does player rarity actually mean mechanically?** Flat stat power
-  (Diamond = objectively better numbers), or wilder/more build-defining
-  traits (Diamond = high-variance, build-around potential, not necessarily
-  "better")? The former risks a power-creep ladder where later pulls
-  obsolete the crew you already have — in tension with pillar 2 (every
-  crew member should stay a memorable, viable pick) and section 4's
-  explicit rule against flair being a dice-roll stat. Leaning toward rarity
-  = trait novelty/build-around potential rather than raw stat superiority,
-  but not decided.
 - **Duplicate pulls.** Fully random 3-card packs make duplicates inevitable.
   Do they convert into a Market-spendable resource (closes a loop with the
   new acquisition channels above), do nothing, or something else?
