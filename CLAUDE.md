@@ -136,6 +136,7 @@ Use these consistently.
 | **Draft** | Post-match choice of upgrades, players, or perks |
 | **Trait** | A modifier attached to a footballer that alters sim behaviour |
 | **Tactic** | Crew-wide instruction affecting positioning and decision-making |
+| **Card** | A run-scoped power-up gained via a Draft; lost when the season ends. Unlike a Trait, not necessarily tied to one footballer |
 
 ## 8. Current status
 
@@ -196,8 +197,10 @@ out explicitly.
   is too few for a crew to develop an identity; and over an abstract branching
   map because a cup circuit means something in football without needing to be
   explained. The choice of which cup to enter next is a primary risk/reward
-  lever. **Constraint: a full season must still be finishable in one sitting**,
-  so cups stay small — keep total matches per season in the 10–15 range, not 30.
+  lever.
+  **Superseded below:** the "must fit in one sitting, 10–15 matches" cap this
+  bullet originally carried is gone — see the "season length is now open-ended"
+  entry.
 - **Sim/render separation, seeded determinism, fixed timestep** — see section 5.
 - **Team size and court geometry stay parameterised** even though 5-a-side is
   settled, so the engine can be tuned and tested at other sizes.
@@ -214,50 +217,68 @@ out explicitly.
   Implemented in `renderer.ts` as a wobbly polygon shaped by a hash of the
   player's id, so each blob's wobble is stable across renders.
 - **Cup loss ends the run outright**, not just the cup. Crew (the five
-  players) and "most progress" carry over into the next run; in-season
-  draft/upgrade picks earned during that run do not. *(Read-back pending —
-  see open questions: need to confirm this is what "cards" meant here, since
-  the word is also used below for the separate, unrelated foul-cards idea.)*
-- **Cup shape, partially settled:** 5 rounds per cup. Rounds 1-4 are
-  two-legged aggregate ties (Champions-League style); round 5 is a single
-  "boss" match. Pure knockout — no group stage. **Not yet locked — conflicts
-  with the season match-count budget above. See open questions.**
-- **Fouls exist; no disciplinary cards** (no bookings, no sendings-off).
-  **Foul consequence mechanic not yet decided — see open questions**, because
-  a normal free-kick restart conflicts with the no-stoppage rule.
+  players) and "most progress" carry over into the next run; in-season Cards
+  (see below) earned during that run do not.
+- **Cup shape:** 5 rounds per cup. Rounds 1-4 are two-legged aggregate ties
+  (Champions League style), each leg played on a different team's home
+  court — otherwise two legs are just the same match played twice, so this
+  is what makes the format earn its place, and it ties the tie-format
+  decision back into the court-is-content pillar. Round 5 is a single "boss"
+  match. Pure knockout throughout — no group stage, lose a tie (or the boss)
+  and you're out of the cup. Tie-break if level on aggregate: sudden death,
+  next goal wins — chosen over a penalty shootout to keep the "ball always
+  live" rule intact through the tie-break too.
+- **Season length is open-ended: cups chain indefinitely, and a season only
+  ends when the crew loses one.** There is no fixed match-count cap and no
+  other win condition.
+  **This explicitly overturns** the earlier "10–15 matches, finishable in one
+  sitting" constraint on the run-structure bullet above — that constraint no
+  longer holds as written. "Finishable in one sitting" is not enforced by a
+  match cap anymore; it'll have to come from something else (skip-to-result,
+  fast drafts, escalating difficulty naturally ending most runs) if it's
+  still a goal at all. **Flagging a related conflict, not yet resolved:**
+  domain vocabulary (section 7) still defines a Run as ending "in death or
+  victory" — under this decision there is no victory state, only death. Need
+  to decide if that's intentional (pure endless/high-score structure) or if
+  a victory/retire point should still exist.
+- **Cards: run-scoped power-ups, not a foul-related concept.** Drafted during
+  a season (like existing stat boosts — e.g. tackle win%, shot accuracy,
+  stamina — up to "wilder" non-stat effects), lost when the season ends.
+  Distinct from **Traits** (permanent, tied to one footballer) — a Card is a
+  crew-level or match-level buff gained through the run. Confirmed as a
+  different concept from the fouls/cards question below; the word "cards"
+  meant two unrelated things and this resolves which is which.
+- **Fouls exist, stop play, and have no disciplinary cards** (no bookings,
+  no sendings-off) — a foul is a dead-ball restart (free kick), not a live
+  knockdown/turnover.
+  **This qualifies pillar 3 ("continuous play... no dead time"):** a foul
+  is now a deliberate, brief exception to "ball always live." Recommend
+  keeping the restart near-instant in implementation (ball respawns at the
+  foul spot and resumes within a tick or two, no real-time pause or
+  animation) so it doesn't meaningfully eat into the ~2-minute watch time —
+  not yet confirmed, see open questions.
 
 ## 10. Open questions
 
 Unresolved. Do not build against these until they're decided and moved to
 section 9.
 
-- **Cup match-count budget conflict.** 4 two-legged ties + 1 boss match = 9
-  matches for a single cup. The decision log already commits to 10-15 total
-  matches per *season*, across several cups. Those don't fit together — pick
-  one: shrink the cup (fewer legs, fewer rounds), raise the season budget, or
-  accept that a season is now essentially one cup.
-- **Two-legged tie-break.** If aggregate score is level after both legs, what
-  breaks it? Leaning toward sudden-death (next goal wins) over a penalty
-  shootout, since it keeps the "ball always live" rule intact — but unconfirmed.
-- **Does each leg use a different court?** Two-legged ties only feel distinct
-  from "play the same match twice" if something changes between legs — e.g.
-  each leg played on that team's home court, tying it to the court-is-content
-  pillar. Unconfirmed.
-- **"Cards" read-back.** Confirm the loss-condition "cards" (in-season
-  draft/upgrade picks, lost on run end) is a different concept from the
-  fouls "cards" (disciplinary bookings, which were explicitly ruled out) —
-  same word, two unrelated meanings, want to make sure that's right before
-  it's load-bearing.
-- **Foul consequence mechanic.** No disciplinary cards is settled, but what
-  actually *happens* on a foul isn't. A free-kick restart breaks the
-  no-stoppage rule (section 4, pillar 3). Does the sim instead do something
-  live — a stumble/knockdown that doesn't stop play, a possession turnover,
-  an advantage-style rule — or something else?
-- **Manager tactics/subs scope.** Confirmed in scope, but undesigned: what do
-  "tactics" actually expose (formation shape, pressing intensity, tempo,
-  something else)? Are subs limited or unlimited, on a cooldown, rolling like
-  futsal? Does pausing freeze the sim tick outright, or just the camera while
-  sim time keeps advancing? Needs its own design pass.
+- **Run end-state: pure endless, or is there still a victory/retire point?**
+  Season-length decision (section 9) says a season only ends on loss — but
+  section 7 still defines a Run as ending in "death or victory." One of
+  those has to give: confirm this is deliberately endless/high-score, or
+  define what victory (or a bank-your-progress "retire") looks like.
+- **Foul restart length.** Fouls stop play (settled) — is the restart as
+  fast as proposed above (near-instant, no real pause), or should it read
+  more like an actual dead-ball moment players notice?
+- **Manager tactics: relationship to Cards.** The "press a button, team gets
+  2x speed for 10 seconds" idea reframes tactics as active, timed abilities
+  rather than persistent formation/mentality settings. Is an ability like
+  this drawn from the same Cards pool (drafted, then activated live during a
+  match), or a separate resource? Limited-use per match, or a cooldown?
+  Does using one pause the sim clock, or run alongside it? Still needs a
+  real design pass, including how it relates to substitutions (same
+  "manager button" category, or different).
 - **Cup access:** what gates which cups are available — results, standing,
   something else — and is the choice between cups a real risk/reward tradeoff
   (harder cup, better draft pool)?
