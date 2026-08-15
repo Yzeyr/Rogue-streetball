@@ -3,6 +3,7 @@ import { stepBall } from "./physics";
 import { buildFormation, formationTarget } from "./formation";
 import { rollAttributes } from "./attributes";
 import { movePlayers } from "./movement";
+import { applyTouches } from "./touches";
 import type { BallState, MatchConfig, MatchState, PlayerState, TeamId } from "./types";
 
 const BALL_RADIUS = 0.11; // metres, roughly a size-5 football
@@ -51,6 +52,7 @@ function kickoffBall(
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
     radius: BALL_RADIUS,
+    touchCooldown: 0,
   };
   return [ball, s2];
 }
@@ -74,15 +76,17 @@ export function createMatch(config: MatchConfig): MatchState {
 // wall clock — dt is always 1 / tickRate.
 export function tickMatch(state: MatchState): MatchState {
   const dt = 1 / state.config.tickRate;
-  const { ball, scoredBy } = stepBall(state.ball, state.config.court, dt);
+
+  const touched = applyTouches(state.ball, state.players, state.config.court, state.rngState);
+  const { ball, scoredBy } = stepBall(touched.ball, state.config.court, dt);
 
   const score = scoredBy
     ? { ...state.score, [scoredBy]: state.score[scoredBy] + 1 }
     : state.score;
 
   const [nextBall, nextRngState] = scoredBy
-    ? kickoffBall(state.rngState, state.config)
-    : [ball, state.rngState];
+    ? kickoffBall(touched.rngState, state.config)
+    : [ball, touched.rngState];
 
   const players = movePlayers(state.players, state.config.court, nextBall, dt);
 

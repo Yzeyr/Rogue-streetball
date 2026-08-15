@@ -150,14 +150,16 @@ Use these consistently.
   and a fixed-timestep match loop (`match.ts`) with `tickMatch` (one tick)
   and `simulateMatch` (runs a whole match headless, proving sim/render
   separation).
-  Players now move: `formation.ts` builds a role-based shape (keeper/back/
-  forward, generic in team size) and computes each player's target slot,
-  elastically shifted toward the ball; `movement.ts` steps every player
-  toward their slot each tick at a pace-driven speed; `attributes.ts` rolls
-  the seven settled attributes (placeholder range until packs/rarity exist
-  to generate them properly). This is off-ball movement only — nobody
-  kicks the ball yet, no passing/shooting/tackling decisions. That's the
-  next layer (see decision log for the agreed build order).
+  Players move and now play: `formation.ts` builds a role-based shape
+  (keeper/back/forward, generic in team size) and computes each player's
+  target slot, elastically shifted toward the ball; `movement.ts` steps
+  every player toward their slot each tick at a pace-driven speed;
+  `attributes.ts` rolls the seven settled attributes (placeholder range
+  until packs/rarity exist to generate them properly); `touches.ts` finds
+  whoever's within control range of a free ball (any player, either team —
+  interceptions fall out for free); `decision.ts` has that player choose
+  shoot/pass/dribble via a utility score weighted by attributes, with
+  Positioning-scaled noise, and executes it as a ball velocity.
 - `src/render/` — `renderer.ts` draws `MatchState` to a Canvas 2D context
   (walls, goal mouths, ball, players as blobs); `loop.ts` is an
   accumulator-driven fixed-timestep loop decoupling playback speed from
@@ -166,11 +168,11 @@ Use these consistently.
 - Team size (5) and court dimensions are `MatchConfig`/`CourtConfig` data,
   not baked-in constants; the formation builder is generic in team size too.
 
-**Explicitly stubbed, not decided yet:** on-ball decisions (shoot/pass/
-dribble), pressing/tackling, and tactics are not built — see the decision
-log for the planned hybrid approach (formation slots + utility-scored
-on-ball decisions). No menus, crew screens, or draft UI exist. No
-persistence yet.
+**Explicitly stubbed, not decided yet:** pressing/tackling isn't built —
+with nothing contesting a shot, matches are currently very high-scoring,
+expected until that third layer lands (see decision log). Tactics aren't
+built either. No menus, crew screens, or draft UI exist. No persistence
+yet.
 
 ## 9. Decision log
 
@@ -419,14 +421,18 @@ them land wrong, nothing here is precious.
   full reasoning every tick.
   **Agreed build order:** formation slots first (players move without any
   ball skill yet), then on-ball decisions, then defensive
-  pressing/tackling as a third pass. **First layer is built** — see
-  section 8 (`formation.ts`, `movement.ts`, `attributes.ts`). On-ball
-  decisions and pressing are not built yet.
-  **Architecture note:** any randomness in decision-making must consume
-  the same threaded `rngState` already in `MatchState`, not a fresh
-  `Math.random()` — required by the seeded-determinism rule (section 5).
-  Not relevant to the formation-slot layer (no randomness involved), but
-  will matter once on-ball scoring noise is added.
+  pressing/tackling as a third pass. **First two layers are built** — see
+  section 8 (`formation.ts`, `movement.ts`, `attributes.ts`, `decision.ts`,
+  `touches.ts`). Pressing/tackling is not built yet.
+  **Architecture note, now in use:** on-ball decision noise (shoot/pass/
+  dribble scoring, aim error) threads through the same `rngState` already
+  in `MatchState` rather than a fresh `Math.random()` — required by the
+  seeded-determinism rule (section 5). `decideTouch` is a pure
+  state-in/state-out function, same shape as the rest of the sim.
+  **Known consequence of the missing third layer, not a bug:** with
+  nothing to contest a shot yet, a full simulated match is currently very
+  high-scoring (double digits each side). Expected until pressing/tackling
+  exists to make possession costly.
 
 ## 10. Open questions
 

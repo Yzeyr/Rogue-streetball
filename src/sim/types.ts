@@ -15,6 +15,10 @@ export interface BallState {
   vx: number;
   vy: number;
   radius: number;
+  // Ticks remaining before any player can touch the ball again — set after
+  // a shot/pass/dribble so the toucher's own kick doesn't immediately
+  // re-trigger a decision next tick. See touches.ts.
+  touchCooldown: number;
 }
 
 // Off-ball shape only — not a tactical formation system yet, just enough
