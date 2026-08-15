@@ -139,6 +139,8 @@ Use these consistently.
 | **Perk** | A passive, run-scoped modifier gained via a Draft; active for the rest of the season, lost when it ends. Unlike a Trait, not necessarily tied to one footballer |
 | **Power-up** | An active, in-match manager ability, triggered live rather than drafted passively. Separate resource from Perks above |
 | **Player Card** | A footballer pulled from a pack, with a rarity tier (Gray/Blue/Purple/Orange/Diamond) — see section 9 |
+| **Coins** | Passive currency — accrues over time regardless of active play (ticket/merch flavour), also earned from duplicate Player Card pulls. Spent at the Market |
+| **Gems** | Currency earned from season performance — how far/well a season goes. What it's spent on is still open |
 
 ## 8. Current status
 
@@ -315,6 +317,7 @@ out explicitly.
 - **Duplicate Player Card pulls convert into Market currency** (confirmed) —
   closes the loop between blind packs and the deliberate-choice Market
   channel: a dupe isn't wasted, it funds targeting a specific player instead.
+  **Renamed to Coins below**, with a second income stream added.
 - **Additional player-acquisition channels, confirmed in scope: Market,
   Youth Academy, Scouting**, alongside packs. Roles implied but not yet
   specified: Market likely a currency spend on a specific, known player
@@ -564,14 +567,42 @@ them land wrong, nothing here is precious.
   of a scoreless match may undercut "watchable, no dead time" (pillar 3).
   Not touched further without a read on whether that's actually a
   problem, since it's a game-feel call, not a mechanical bug.
+- **Two currencies: Coins and Gems.** Prompted by a reference screenshot
+  (a similar mobile football-manager roguelike) — explicitly "just one
+  example of what it could look like," not a spec to replicate wholesale;
+  only the pieces below were actually pulled from it.
+  - **Coins:** passive — accrues over time regardless of active play
+    (ticket-sales/merch flavour), plus the already-settled duplicate-pull
+    income stream. Spent at the Market. Supersedes the earlier "Market
+    currency" name.
+  - **Gems:** earned from season performance — how far/well a season
+    goes. **Open:** what Gems actually buy is undecided; a second
+    currency needs a real sink or it's currency for its own sake.
+  - **PvP, Friends, Ranking — explicitly out of scope.** Confirms the
+    single-player-only direction; not a small add if revisited later.
+  - **Identity — cut**, not needed.
+  - **Altar, tentative direction only:** sacrifice a Player Card (as an
+    alternative to converting dupes into Coins) for "some sort of
+    reward" — the reward itself is undefined. Logged as a loose idea,
+    not a locked mechanic; don't build against this until it's specced.
+  - **Legends, tentative, low complexity:** a stats/record screen —
+    top scorers etc., tracked across the crew's history. A display
+    feature, not a new mechanic.
 
 ## 10. Open questions
 
 Unresolved. Do not build against these until they're decided and moved to
 section 9.
 
-*(Empty for now — the previous batch was cleared out in one pass above.
-Re-populate as new questions come up.)*
+- **What do Gems actually buy?** Earning is settled (season performance);
+  spending isn't. Needs a real sink before it's more than a number that
+  goes up.
+- **What reward does the Altar give for a sacrificed Player Card?** The
+  mechanic's existence is a loose idea, not the payout.
+- **Match scoring at the real 60-second duration.** ~40% of a 10-seed
+  headless sample came back 0-0 — flagged after the meta-game vertical
+  slice shipped, not yet acted on. Needs a read on whether that's
+  actually a problem before touching shoot/pass/save/tackle balance again.
 
 ## 11. How to start a session
 
