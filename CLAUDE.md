@@ -136,8 +136,9 @@ Use these consistently.
 | **Draft** | Post-match choice of upgrades, players, or perks |
 | **Trait** | A modifier attached to a footballer that alters sim behaviour |
 | **Tactic** | Crew-wide instruction affecting positioning and decision-making |
-| **Card** | A passive, run-scoped modifier gained via a Draft; active for the rest of the season, lost when it ends. Unlike a Trait, not necessarily tied to one footballer |
-| **Power-up** | An active, in-match manager ability, triggered live rather than drafted passively. Separate resource from Cards |
+| **Card** *(rename pending — see open questions)* | A passive, run-scoped modifier gained via a Draft; active for the rest of the season, lost when it ends. Unlike a Trait, not necessarily tied to one footballer |
+| **Power-up** | An active, in-match manager ability, triggered live rather than drafted passively. Separate resource from the passive Card above |
+| **Player Card** | A footballer pulled from a pack, with a rarity tier (Gray/Blue/Purple/Orange/Diamond) — see section 9 |
 
 ## 8. Current status
 
@@ -269,11 +270,15 @@ out explicitly.
 - **New crew members come from packs, opened with the victory-milestone
   reward** (closes part of the "what does a milestone bank" open question).
   **Packs are fully random** — confirmed, overriding an earlier recommendation
-  toward a revealed choice-of-N. A pack reveals **3 player-cards**, all
-  received, none picked among.
+  toward a revealed choice-of-N. A pack reveals **3 Player Cards**, all
+  received, none picked among. Naming settled: a pulled footballer is a
+  **Player Card**, added to the vocab table.
   **Note on pillar 5:** a blind pull is a step away from "draft choices
   should be meaningful, not a stat roll" — flagging once since it's a
   real tension, not re-litigating it since the call's been made.
+- **Duplicate Player Card pulls convert into Market currency** (confirmed) —
+  closes the loop between blind packs and the deliberate-choice Market
+  channel: a dupe isn't wasted, it funds targeting a specific player instead.
 - **Additional player-acquisition channels, confirmed in scope: Market,
   Youth Academy, Scouting**, alongside packs. Roles implied but not yet
   specified: Market likely a currency spend on a specific, known player
@@ -289,7 +294,7 @@ out explicitly.
   prove out, rather than speccing all four now. Not yet confirmed.
 - **Player rarity tiers, confirmed:** Gray (common) → Blue (rare) → Purple
   (epic) → Orange (legendary) → Diamond/sparkly (icon). This is the rarity
-  of an individual player-card pulled from a pack — separate from a pack's
+  of an individual Player Card pulled from a pack — separate from a pack's
   own tier (Bronze/Silver/...).
 - **Pack tier gates the rarity ceiling** (confirmed — resolves the earlier
   "gate vs weight" open question in favour of gate):
@@ -336,17 +341,18 @@ section 9.
   how many available per match, limited-use or cooldown-based, does
   triggering one pause the sim clock or run alongside it, and how does it
   relate to substitutions (same "manager button" category, or different)?
-- **Naming collision: "Card" now means two unrelated things.** (1) the
-  passive run-scoped power-up defined earlier (already in the vocab table
-  as **Card**), and (2) a player, represented as a collectible card with a
-  rarity tier, pulled from a pack (this round). Recommend renaming one
-  before this goes further — likely the power-up, since the card/rarity/pack
-  metaphor is clearly the player-facing one (e.g. rename the power-up to
-  **Perk** or **Boost**, keep **Card** for the player-collectible object).
-  Need a pick.
-- **Duplicate pulls.** Fully random 3-card packs make duplicates inevitable.
-  Do they convert into a Market-spendable resource (closes a loop with the
-  new acquisition channels above), do nothing, or something else?
+- **Naming collision, still open — one more round needed.** Pack pulls are
+  now settled as **Player Card**, which is unambiguous. What's still
+  unsettled is the *other* one: the passive run-scoped modifier (+tackle
+  win%, +stamina, etc, drafted between matches) is currently still named
+  **Card** in the vocab table, which reads as a collision with Player Card.
+  I'd previously (sloppily) called that passive modifier "the power-up" when
+  asking about a rename — but **Power-up** is already the settled name for
+  a *different*, separate thing (the live, in-match manager ability, e.g.
+  "2x speed for 10 seconds"). Renaming the passive modifier to "Power-up"
+  too would recreate the same one-name-two-things problem, just shifted.
+  Need a distinct third name for the passive modifier — **Perk** is my
+  suggestion, but any name that isn't Card or Power-up works.
 - **Cup access:** what gates which cups are available — results, standing,
   something else — and is the choice between cups a real risk/reward tradeoff
   (harder cup, better draft pool)?
