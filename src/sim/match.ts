@@ -53,6 +53,7 @@ function kickoffBall(
     vy: Math.sin(angle) * speed,
     radius: BALL_RADIUS,
     touchCooldown: 0,
+    possessionTeam: null,
   };
   return [ball, s2];
 }

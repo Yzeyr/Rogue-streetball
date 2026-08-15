@@ -15,7 +15,7 @@ export function stepBall(
   dt: number
 ): BallStepResult {
   let { x, y, vx, vy } = ball;
-  const { radius, touchCooldown } = ball;
+  const { radius } = ball;
 
   x += vx * dt;
   y += vy * dt;
@@ -54,5 +54,5 @@ export function stepBall(
     vy = -vy * court.wallRestitution;
   }
 
-  return { ball: { x, y, vx, vy, radius, touchCooldown }, scoredBy };
+  return { ball: { ...ball, x, y, vx, vy, radius }, scoredBy };
 }

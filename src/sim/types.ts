@@ -19,6 +19,10 @@ export interface BallState {
   // a shot/pass/dribble so the toucher's own kick doesn't immediately
   // re-trigger a decision next tick. See touches.ts.
   touchCooldown: number;
+  // Which team last touched the ball, while touchCooldown > 0 — this is
+  // who a nearby opponent is pressing/tackling. Null when the ball is
+  // fully free (cooldown elapsed, e.g. right after kickoff). See touches.ts.
+  possessionTeam: TeamId | null;
 }
 
 // Off-ball shape only — not a tactical formation system yet, just enough

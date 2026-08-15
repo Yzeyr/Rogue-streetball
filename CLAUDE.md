@@ -157,9 +157,11 @@ Use these consistently.
   `attributes.ts` rolls the seven settled attributes (placeholder range
   until packs/rarity exist to generate them properly); `touches.ts` finds
   whoever's within control range of a free ball (any player, either team —
-  interceptions fall out for free); `decision.ts` has that player choose
-  shoot/pass/dribble via a utility score weighted by attributes, with
-  Positioning-scaled noise, and executes it as a ball velocity.
+  interceptions fall out for free) and, while the ball is held, gives a
+  nearby opponent a Tackling-weighted chance to win it; `decision.ts` has
+  the player in control choose shoot/pass/dribble via a utility score
+  weighted by attributes, with Positioning-scaled noise, and executes it
+  as a ball velocity.
 - `src/render/` — `renderer.ts` draws `MatchState` to a Canvas 2D context
   (walls, goal mouths, ball, players as blobs); `loop.ts` is an
   accumulator-driven fixed-timestep loop decoupling playback speed from
@@ -168,11 +170,11 @@ Use these consistently.
 - Team size (5) and court dimensions are `MatchConfig`/`CourtConfig` data,
   not baked-in constants; the formation builder is generic in team size too.
 
-**Explicitly stubbed, not decided yet:** pressing/tackling isn't built —
-with nothing contesting a shot, matches are currently very high-scoring,
-expected until that third layer lands (see decision log). Tactics aren't
-built either. No menus, crew screens, or draft UI exist. No persistence
-yet.
+**Explicitly stubbed, not decided yet:** no goalkeeper save mechanic, so a
+shot past the last defender always scores — matches are still
+high-scoring, see decision log. No fouls (tackling can fail, but nothing
+stops play on a mistimed one yet). Tactics aren't built. No menus, crew
+screens, or draft UI exist. No persistence yet.
 
 ## 9. Decision log
 
@@ -421,18 +423,27 @@ them land wrong, nothing here is precious.
   full reasoning every tick.
   **Agreed build order:** formation slots first (players move without any
   ball skill yet), then on-ball decisions, then defensive
-  pressing/tackling as a third pass. **First two layers are built** — see
+  pressing/tackling as a third pass. **All three layers are built** — see
   section 8 (`formation.ts`, `movement.ts`, `attributes.ts`, `decision.ts`,
-  `touches.ts`). Pressing/tackling is not built yet.
-  **Architecture note, now in use:** on-ball decision noise (shoot/pass/
-  dribble scoring, aim error) threads through the same `rngState` already
-  in `MatchState` rather than a fresh `Math.random()` — required by the
-  seeded-determinism rule (section 5). `decideTouch` is a pure
-  state-in/state-out function, same shape as the rest of the sim.
-  **Known consequence of the missing third layer, not a bug:** with
-  nothing to contest a shot yet, a full simulated match is currently very
-  high-scoring (double digits each side). Expected until pressing/tackling
-  exists to make possession costly.
+  `touches.ts`).
+  **Architecture note, in use throughout:** all decision noise (shoot/
+  pass/dribble scoring, aim error, tackle rolls) threads through the same
+  `rngState` already in `MatchState` rather than a fresh `Math.random()`
+  — required by the seeded-determinism rule (section 5). `decideTouch` and
+  `applyTouches` are pure state-in/state-out, same shape as the rest of
+  the sim.
+  **Tackling model:** while the ball is held (mid-dribble), the nearest
+  opponent within tackle range gets a per-tick chance to win it, weighted
+  by Tackling on both sides; a won tackle is resolved exactly like a fresh
+  touch, so the same decision code handles both. A failed attempt just
+  costs the try — no foul roll on a mistimed tackle yet, since the actual
+  foul/free-kick restart isn't built. That's a natural next hook once it
+  is, not something to bolt on here.
+  **Still high-scoring, and now clearer why:** tackling reduced scoring
+  somewhat but matches are still very high-scoring — there's no
+  goalkeeper save mechanic yet (Goalkeeping attribute exists but isn't
+  read by anything), so a shot that beats the last defender is always a
+  goal. That's the next real gap, not a bug in this layer.
 
 ## 10. Open questions
 
