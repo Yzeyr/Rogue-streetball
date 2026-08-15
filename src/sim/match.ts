@@ -1,26 +1,42 @@
 import { createRng, nextRange, type RngState } from "./rng";
 import { stepBall } from "./physics";
+import { buildFormation, formationTarget } from "./formation";
+import { rollAttributes } from "./attributes";
+import { movePlayers } from "./movement";
 import type { BallState, MatchConfig, MatchState, PlayerState, TeamId } from "./types";
 
 const BALL_RADIUS = 0.11; // metres, roughly a size-5 football
 const KICKOFF_SPEED_RANGE: [number, number] = [3, 6]; // metres/second
 
-function spawnPlayers(config: MatchConfig): PlayerState[] {
+function spawnPlayers(
+  rngState: RngState,
+  config: MatchConfig,
+  ball: BallState
+): [players: PlayerState[], next: RngState] {
   const players: PlayerState[] = [];
   const teams: TeamId[] = ["home", "away"];
+  let s = rngState;
+
   for (const team of teams) {
-    const goalX = team === "home" ? 1 : config.court.width - 1;
-    const spacing = config.court.height / (config.teamSize + 1);
-    for (let i = 0; i < config.teamSize; i++) {
+    const formation = buildFormation(config.teamSize);
+    formation.forEach((slot, i) => {
+      const [attributes, next] = rollAttributes(s);
+      s = next;
+      const spawn = formationTarget(slot, team, config.court, ball);
       players.push({
         id: `${team}-${i}`,
         team,
-        x: goalX,
-        y: spacing * (i + 1),
+        role: slot.role,
+        x: spawn.x,
+        y: spawn.y,
+        homeXFraction: slot.xFraction,
+        homeYFraction: slot.yFraction,
+        attributes,
       });
-    }
+    });
   }
-  return players;
+
+  return [players, s];
 }
 
 function kickoffBall(
@@ -41,15 +57,16 @@ function kickoffBall(
 
 export function createMatch(config: MatchConfig): MatchState {
   const rngState = createRng(config.seed);
-  const [ball, nextRngState] = kickoffBall(rngState, config);
+  const [ball, rngAfterBall] = kickoffBall(rngState, config);
+  const [players, rngAfterPlayers] = spawnPlayers(rngAfterBall, config, ball);
   return {
     config,
     tick: 0,
     elapsedSeconds: 0,
     ball,
-    players: spawnPlayers(config),
+    players,
     score: { home: 0, away: 0 },
-    rngState: nextRngState,
+    rngState: rngAfterPlayers,
   };
 }
 
@@ -67,11 +84,14 @@ export function tickMatch(state: MatchState): MatchState {
     ? kickoffBall(state.rngState, state.config)
     : [ball, state.rngState];
 
+  const players = movePlayers(state.players, state.config.court, nextBall, dt);
+
   return {
     ...state,
     tick: state.tick + 1,
     elapsedSeconds: state.elapsedSeconds + dt,
     ball: nextBall,
+    players,
     score,
     rngState: nextRngState,
   };

@@ -17,14 +17,36 @@ export interface BallState {
   radius: number;
 }
 
-// Placeholder entity for a crew member on the court. Position is static
-// for now — movement/decision-making is an open design question (see
-// project section 10) and is not implemented yet.
+// Off-ball shape only — not a tactical formation system yet, just enough
+// roles to give team shape a keeper vs. outfield distinction.
+export type PlayerRole = "keeper" | "back" | "forward";
+
+// The seven settled player attributes (see project decision log). Values
+// are 0-100. Only `pace` is consumed by the sim so far; the rest are
+// carried now so PlayerState doesn't need a breaking shape change once
+// shooting/passing/tackling decisions are built.
+export interface PlayerAttributes {
+  pace: number;
+  shooting: number;
+  passing: number;
+  tackling: number;
+  positioning: number;
+  stamina: number;
+  goalkeeping: number;
+}
+
 export interface PlayerState {
   id: string;
   team: TeamId;
+  role: PlayerRole;
   x: number;
   y: number;
+  // Formation slot before the ball-tracking shift is applied, as a
+  // fraction of the court: x is 0 at this player's own goal, 1 at the
+  // opponent's; y is 0..1 across the pitch. See formation.ts.
+  homeXFraction: number;
+  homeYFraction: number;
+  attributes: PlayerAttributes;
 }
 
 export interface MatchConfig {

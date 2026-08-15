@@ -150,17 +150,26 @@ Use these consistently.
   and a fixed-timestep match loop (`match.ts`) with `tickMatch` (one tick)
   and `simulateMatch` (runs a whole match headless, proving sim/render
   separation).
+  Players now move: `formation.ts` builds a role-based shape (keeper/back/
+  forward, generic in team size) and computes each player's target slot,
+  elastically shifted toward the ball; `movement.ts` steps every player
+  toward their slot each tick at a pace-driven speed; `attributes.ts` rolls
+  the seven settled attributes (placeholder range until packs/rarity exist
+  to generate them properly). This is off-ball movement only — nobody
+  kicks the ball yet, no passing/shooting/tackling decisions. That's the
+  next layer (see decision log for the agreed build order).
 - `src/render/` — `renderer.ts` draws `MatchState` to a Canvas 2D context
-  (walls, goal mouths, ball, players as dots); `loop.ts` is an
+  (walls, goal mouths, ball, players as blobs); `loop.ts` is an
   accumulator-driven fixed-timestep loop decoupling playback speed from
-  wall-clock frame rate (1x/4x buttons wired in `main.ts`).
+  wall-clock frame rate (1x/4x buttons wired in `main.ts`). Landscape,
+  goals left/right.
 - Team size (5) and court dimensions are `MatchConfig`/`CourtConfig` data,
-  not baked-in constants.
+  not baked-in constants; the formation builder is generic in team size too.
 
-**Explicitly stubbed, not decided yet:** players are static dots at spawn
-positions with no movement or decision-making — player model, attributes,
-and tactics are open questions (section 10) and nothing here should be
-read as settling them. No menus, crew screens, or draft UI exist. No
+**Explicitly stubbed, not decided yet:** on-ball decisions (shoot/pass/
+dribble), pressing/tackling, and tactics are not built — see the decision
+log for the planned hybrid approach (formation slots + utility-scored
+on-ball decisions). No menus, crew screens, or draft UI exist. No
 persistence yet.
 
 ## 9. Decision log
@@ -397,6 +406,27 @@ them land wrong, nothing here is precious.
   internal resolution and scaled up crisp/pixelated, instead of the
   current wobbly blob polygons — with true drawn sprite sheets treated as
   a separate, bigger art pass later. Not yet confirmed.
+- **Player movement/decision-making architecture: a hybrid.** Formation
+  slots drive off-ball movement (cheap, deterministic, the natural hook
+  for a future Tactic); a small utility-scored decision only runs for
+  whoever's on or near the ball (shoot / pass to X / dribble, weighted by
+  attributes and pressure). Chosen over two alternatives: full utility AI
+  for all ten players every tick (most emergent, but risks a ball-chasing
+  swarm and is hard to tune solo) and pure scripted FSM for everyone
+  (cheapest, but reads as scripted — directly against pillar 1's "not
+  scripted set pieces"). The hybrid puts the expensive/interesting
+  reasoning exactly where a viewer's eye goes, without 10 agents doing
+  full reasoning every tick.
+  **Agreed build order:** formation slots first (players move without any
+  ball skill yet), then on-ball decisions, then defensive
+  pressing/tackling as a third pass. **First layer is built** — see
+  section 8 (`formation.ts`, `movement.ts`, `attributes.ts`). On-ball
+  decisions and pressing are not built yet.
+  **Architecture note:** any randomness in decision-making must consume
+  the same threaded `rngState` already in `MatchState`, not a fresh
+  `Math.random()` — required by the seeded-determinism rule (section 5).
+  Not relevant to the formation-slot layer (no randomness involved), but
+  will matter once on-ball scoring noise is added.
 
 ## 10. Open questions
 
