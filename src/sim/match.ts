@@ -5,7 +5,7 @@ import { rollAttributes } from "./attributes";
 import { movePlayers } from "./movement";
 import { applyTouches } from "./touches";
 import { attemptSave } from "./saves";
-import type { BallState, MatchConfig, MatchState, PlayerState, TeamId } from "./types";
+import type { BallState, MatchConfig, MatchState, PlayerAttributes, PlayerState, TeamId } from "./types";
 
 const BALL_RADIUS = 0.11; // metres, roughly a size-5 football
 const KICKOFF_SPEED_RANGE: [number, number] = [3, 6]; // metres/second
@@ -13,7 +13,8 @@ const KICKOFF_SPEED_RANGE: [number, number] = [3, 6]; // metres/second
 function spawnPlayers(
   rngState: RngState,
   config: MatchConfig,
-  ball: BallState
+  ball: BallState,
+  homeAttributes?: PlayerAttributes[]
 ): [players: PlayerState[], next: RngState] {
   const players: PlayerState[] = [];
   const teams: TeamId[] = ["home", "away"];
@@ -22,8 +23,15 @@ function spawnPlayers(
   for (const team of teams) {
     const formation = buildFormation(config.teamSize);
     formation.forEach((slot, i) => {
-      const [attributes, next] = rollAttributes(s);
-      s = next;
+      const provided = team === "home" ? homeAttributes?.[i] : undefined;
+      let attributes: PlayerAttributes;
+      if (provided) {
+        attributes = provided;
+      } else {
+        const [rolled, next] = rollAttributes(s);
+        s = next;
+        attributes = rolled;
+      }
       const spawn = formationTarget(slot, team, config.court, ball);
       players.push({
         id: `${team}-${i}`,
@@ -60,10 +68,15 @@ function kickoffBall(
   return [ball, s2];
 }
 
-export function createMatch(config: MatchConfig): MatchState {
+// homeAttributes lets a meta-game Crew (see src/meta/) supply the home
+// team's stats instead of the placeholder random roll — the sim itself
+// stays unaware that "Crew" exists at all, it just takes an optional
+// array of its own PlayerAttributes type. Away is always randomly rolled
+// (a generated opponent), same as before.
+export function createMatch(config: MatchConfig, homeAttributes?: PlayerAttributes[]): MatchState {
   const rngState = createRng(config.seed);
   const [ball, rngAfterBall] = kickoffBall(rngState, config);
-  const [players, rngAfterPlayers] = spawnPlayers(rngAfterBall, config, ball);
+  const [players, rngAfterPlayers] = spawnPlayers(rngAfterBall, config, ball, homeAttributes);
   return {
     config,
     tick: 0,
@@ -105,15 +118,19 @@ export function tickMatch(state: MatchState): MatchState {
   };
 }
 
+// A match is over once it's run its configured duration — a query on the
+// state, not a special tick, so tickMatch stays a plain per-tick step with
+// no notion of "done." Whoever drives the loop (real-time or headless)
+// decides what to do once this is true.
+export function isMatchComplete(state: MatchState): boolean {
+  return state.elapsedSeconds >= state.config.durationSeconds;
+}
+
 // Runs the match to completion with no renderer attached, proving sim and
 // render are fully decoupled. Used for instant-result simulation.
-export function simulateMatch(
-  config: MatchConfig,
-  durationSeconds: number
-): MatchState {
-  let state = createMatch(config);
-  const totalTicks = Math.floor(durationSeconds * config.tickRate);
-  for (let i = 0; i < totalTicks; i++) {
+export function simulateMatch(config: MatchConfig, homeAttributes?: PlayerAttributes[]): MatchState {
+  let state = createMatch(config, homeAttributes);
+  while (!isMatchComplete(state)) {
     state = tickMatch(state);
   }
   return state;

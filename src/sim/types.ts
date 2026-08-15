@@ -68,6 +68,7 @@ export interface MatchConfig {
   court: CourtConfig;
   teamSize: number;
   tickRate: number; // sim ticks per second
+  durationSeconds: number; // sim time; ~60 reads as ~1 real minute at 1x (see decision log)
 }
 
 export interface MatchState {

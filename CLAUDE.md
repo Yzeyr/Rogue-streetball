@@ -165,18 +165,37 @@ Use these consistently.
   weighted chance to stop a shot heading at their own goal, run before
   `touches.ts` each tick; a save hands the keeper control the same way any
   touch does.
+  `MatchConfig` now carries `durationSeconds` (60, ~1 real minute at 1x
+  per the decision log) and `isMatchComplete` is a plain query on
+  `MatchState` — `tickMatch` itself still has no notion of "done."
+  `createMatch`/`simulateMatch` take an optional `homeAttributes` array
+  (the sim's own `PlayerAttributes` type) so a meta-game Crew can supply
+  the home team's stats; sim stays unaware Crew exists at all.
 - `src/render/` — `renderer.ts` draws `MatchState` to a Canvas 2D context
   (walls, goal mouths, ball, players as blobs); `loop.ts` is an
   accumulator-driven fixed-timestep loop decoupling playback speed from
   wall-clock frame rate (1x/4x buttons wired in `main.ts`). Landscape,
   goals left/right.
+- `src/meta/` — first vertical slice of the roguelike layer. `crew.ts`
+  has a hand-authored 5-player `STARTER_CREW` (named, not rolled) feeding
+  the sim's `PlayerAttributes`; `perks.ts` is a small hand-authored Perk
+  pool applied crew-wide; `run.ts` is a thin `RunState` (crew + win/loss
+  record) with no cups, currency, or persistence yet.
+- `src/main.ts` now drives a real screen flow instead of loading straight
+  into a match: home (crew list, "Start run") → match (existing sim/
+  render, unchanged) → result → draft (pick 1 of 3 Perks) → next match,
+  looping indefinitely. Verified end-to-end in-browser, no console errors.
 - Team size (5) and court dimensions are `MatchConfig`/`CourtConfig` data,
   not baked-in constants; the formation builder is generic in team size too.
 
-**Explicitly stubbed, not decided yet:** no rush-keeper behaviour (keeper
-never pushes forward — waiting on the Tactic system). No fouls (tackling
-can fail, but nothing stops play on a mistimed one yet). Tactics aren't
-built. No menus, crew screens, or draft UI exist. No persistence yet.
+**Explicitly stubbed, not decided yet:** no cups/season structure yet —
+the loop above is just "next match forever," not the settled two-legged-
+tie cup shape. No packs, Market, rarity, or Player Cards — the crew is
+one fixed hand-authored roster, no acquisition system. No persistence
+(a page refresh loses the run). No rush-keeper behaviour (keeper never
+pushes forward — waiting on the Tactic system). No fouls (tackling can
+fail, but nothing stops play on a mistimed one yet). Tactics, power-ups,
+and substitutions aren't built.
 
 ## 9. Decision log
 
@@ -522,6 +541,29 @@ them land wrong, nothing here is precious.
   revisiting once empty-net-from-distance (the settled power-play cost)
   is actually in play, since that mechanic depends on long shots being a
   real, if low-percentage, option.
+- **Meta-game vertical slice (Option B of three proposed).** Rather than
+  building the data layer or the full screen set first, built the
+  thinnest possible end-to-end loop — hardcoded crew, one match, one
+  result, one perk draft, repeat — to prove the loop before investing in
+  cups/packs/persistence. See section 8 for what exists (`src/meta/`,
+  `main.ts`'s screen flow). Chosen over building data-first (types +
+  persistence, nothing visible for a while) or screens-first (UI/UX
+  settled early, but with fake data and rework risk once real data
+  lands).
+  **Match duration decided as part of this:** `MatchConfig.durationSeconds`
+  is a real field now, set to 60 — literally realizing the "~1 real
+  minute at 1x" decision from a few rounds back, which had been left as
+  "implementation detail for later." `isMatchComplete` is a query on
+  `MatchState`, not a special tick, so `tickMatch` stays a plain
+  per-tick step with no notion of "done."
+  **Flagged, not yet acted on:** the scoring balance (shoot/pass/dribble
+  weights, save/tackle chances) was tuned and verified against a 240-
+  second match window a few rounds back. At the real 60-second duration,
+  a 10-seed headless check came back with 4 goalless (0-0) matches — the
+  proportional drop tracks (60s is a quarter of 240s), but a ~40% chance
+  of a scoreless match may undercut "watchable, no dead time" (pillar 3).
+  Not touched further without a read on whether that's actually a
+  problem, since it's a game-feel call, not a mechanical bug.
 
 ## 10. Open questions
 

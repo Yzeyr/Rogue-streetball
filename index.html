@@ -7,15 +7,37 @@
   </head>
   <body>
     <div id="app">
-      <div id="hud">
-        <div id="score">0 – 0</div>
-        <div id="controls">
-          <button id="speed-1x">1x</button>
-          <button id="speed-4x">4x</button>
-          <button id="simulate-instant">Sim to result</button>
+      <section id="screen-home" class="screen">
+        <h1>Rogue Streetball</h1>
+        <p class="subtitle">Your crew</p>
+        <ul id="crew-list"></ul>
+        <button id="start-run" class="primary">Start run</button>
+      </section>
+
+      <section id="screen-match" class="screen" hidden>
+        <div id="hud">
+          <div id="score">0 – 0</div>
+          <div id="controls">
+            <button id="speed-1x">1x</button>
+            <button id="speed-4x">4x</button>
+            <button id="simulate-instant">Sim to result</button>
+          </div>
         </div>
-      </div>
-      <canvas id="court"></canvas>
+        <canvas id="court"></canvas>
+      </section>
+
+      <section id="screen-result" class="screen" hidden>
+        <h2 id="result-title"></h2>
+        <p id="result-score"></p>
+        <p id="result-record"></p>
+        <button id="continue-btn" class="primary">Continue</button>
+      </section>
+
+      <section id="screen-draft" class="screen" hidden>
+        <h2>Pick a perk</h2>
+        <p class="subtitle">Applies to the whole crew, for the rest of the run</p>
+        <div id="perk-options"></div>
+      </section>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
