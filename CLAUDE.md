@@ -492,6 +492,36 @@ them land wrong, nothing here is precious.
     0.75m.
   - Re-ran the 8-seed scoring sweep after both fixes: still a healthy
     football range (0-8 goals a side), no regression from the keeper fix.
+- **Passing was effectively dead; fixed by giving all three on-ball
+  actions a shared score baseline.** Flagged in the same playtesting pass
+  ("it also needs to pass") — a headless action-mix check confirmed it:
+  passing was 0-4% of touches, dribbling 81-100%. Root cause: pass score
+  multiplied three fractions together (passing skill × forward progress ×
+  range), each under 1, which crushed it to a fraction of dribble's simple
+  additive score. Fixed in `decision.ts` by giving shoot/pass/dribble a
+  **shared baseline + skill term**, with situational bonuses/penalties
+  (goal proximity for shoot, forward progress and range for pass, a flat
+  fallback bonus for dribble) doing the differentiating instead of the
+  formula shape itself.
+  **Iterated three times against a headless action-mix check before
+  landing**, each version measured, not guessed:
+  1. Multiplicative pass score: pass 0-4%, dribble 81-100%.
+  2. Naive additive fix: overcorrected, pass 66-86%, dribble 9-21%.
+  3. Shared baseline, first pass: shoot's proximity bonus zone (10m, on a
+     20m pitch) was too generous with no blocking/angle model — shoot
+     50%, dribble 1-5%.
+  4. **Landed:** shrank the shoot bonus zone to 8m and rebalanced the
+     dribble fallback bonus — dribble 16-24%, pass 41-45%, shoot 31-41%
+     across 4 seeds. Re-verified scoring (0-7 goals a side) and the
+     carrying/separation fixes above still hold (0.75m separation, 4.5-6s
+     carry streaks) — no regressions from the rebalance.
+  **Not modelled, flagged for whenever the power-play/rush-keeper system
+  gets built:** no blocking or shot-angle awareness, so "good position to
+  shoot from" is currently just raw distance to goal. Long-range shots are
+  scoreable (never disqualified) but currently uncommon beyond ~8m — worth
+  revisiting once empty-net-from-distance (the settled power-play cost)
+  is actually in play, since that mechanic depends on long shots being a
+  real, if low-percentage, option.
 
 ## 10. Open questions
 

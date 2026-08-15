@@ -8,8 +8,27 @@ const DRIBBLE_PUSH = 2.5; // metres — a short shove forward, not a kick upfiel
 
 // Soft falloff distances, not hard cutoffs — the ball is shootable from
 // anywhere (section 4 rule), these just make closer options score higher.
-const SHOOT_RANGE = 10; // metres
+// SHOOT_RANGE is deliberately well under half the pitch length (20m) —
+// at 10m every attacking-half touch got a nonnegative shooting bonus
+// regardless of actually being a good chance (no blocking/angle model),
+// which pushed shot selection to ~50% of touches. 6m keeps the bonus zone
+// closer to "actually near goal."
+const SHOOT_RANGE = 8; // metres
 const MAX_PASS_RANGE = 14; // metres
+
+// All three actions share this shape — a common baseline plus a skill
+// term of the same weight — so at a neutral situation (no clear shot, no
+// standout pass, nothing better to do) they land in the same ballpark and
+// genuinely compete. Without a shared baseline, whichever action's formula
+// happened to produce bigger numbers would dominate regardless of
+// situation — verified headlessly three times while tuning: multiplicative
+// pass scoring crushed passing to 0-4% of touches; the first additive fix
+// overcorrected to 66-86% pass; widening the shoot bonus zone then pushed
+// shooting to ~50%. Bonuses/penalties below are what should decide the
+// outcome, not incidental differences in formula shape or range.
+const BASE_ACTION_SCORE = 0.3;
+const SKILL_WEIGHT = 0.2;
+const DRIBBLE_FALLBACK_BONUS = 0.08; // dribble is the reliable "nothing better" option
 
 interface Vector {
   x: number;
@@ -70,21 +89,33 @@ export function decideTouch(
 
   const goal = opponentGoal(player.team, court);
   const distToGoal = distance(player, goal);
+  // Proximity bonus: +0.4 point-blank, 0 at SHOOT_RANGE, negative (but
+  // never disqualifying — shots stay possible from anywhere) beyond it.
+  const proximityBonus = clamp(1 - distToGoal / SHOOT_RANGE, -1, 1) * 0.35;
   const shootScore =
-    (player.attributes.shooting / 100) * (SHOOT_RANGE / (SHOOT_RANGE + distToGoal)) + drawNoise();
+    BASE_ACTION_SCORE + (player.attributes.shooting / 100) * SKILL_WEIGHT + proximityBonus + drawNoise();
 
   let bestPass: { mate: PlayerState; score: number } | null = null;
   for (const mate of teammates) {
     const forwardDelta = player.team === "home" ? mate.x - player.x : player.x - mate.x;
-    const progress = clamp(0.5 + forwardDelta / court.width, 0, 1);
-    const range = clamp(1 - distance(player, mate) / MAX_PASS_RANGE, 0.15, 1);
-    const score = (player.attributes.passing / 100) * progress * range + drawNoise();
+    const progressBonus = clamp(forwardDelta / court.width, -0.12, 0.22);
+    const rangePenalty = clamp(distance(player, mate) / MAX_PASS_RANGE, 0, 1) * 0.15;
+    const score =
+      BASE_ACTION_SCORE +
+      (player.attributes.passing / 100) * SKILL_WEIGHT +
+      progressBonus -
+      rangePenalty +
+      drawNoise();
     if (!bestPass || score > bestPass.score) {
       bestPass = { mate, score };
     }
   }
 
-  const dribbleScore = 0.3 + (player.attributes.pace / 100) * 0.2 + drawNoise();
+  const dribbleScore =
+    BASE_ACTION_SCORE +
+    (player.attributes.pace / 100) * SKILL_WEIGHT +
+    DRIBBLE_FALLBACK_BONUS +
+    drawNoise();
 
   const [aimJitter, s2] = nextRange(s, -1, 1);
   s = s2;
