@@ -383,8 +383,8 @@ them land wrong, nothing here is precious.
   vertically — goals at top and bottom, not left and right — rather than
   squeezing a wide landscape court into a narrow viewport. No sim changes
   needed: `CourtConfig` and the goal-on-x-axis physics in `physics.ts`
-  don't have to change, since this is purely how the renderer maps sim
-  space onto the canvas. Not yet implemented.
+  are untouched; `renderer.ts` maps sim space onto the canvas via a
+  `toScreen` transform instead. Implemented and verified in-browser.
 
 ## 10. Open questions
 
