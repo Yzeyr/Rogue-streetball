@@ -7,12 +7,12 @@ const PX_PER_METRE = 32;
 
 // The sim models goals on the x=0 / x=width walls (see physics.ts) with no
 // notion of screen orientation — it doesn't know or care how it's drawn.
-// The game is portrait, phone-first, so the render layer rotates the court
-// a quarter turn: sim x (the goal-to-goal axis) maps to screen y, and sim y
-// (the side-to-side axis) maps to screen x. Goals end up at the top and
-// bottom of the canvas instead of the sides.
+// Landscape, goals left/right: sim space maps straight onto the canvas with
+// no rotation. (Portrait was tried and reverted — kept as a named seam here
+// in case orientation changes again, rather than inlining sim coordinates
+// directly into every draw call.)
 function toScreen(simX: number, simY: number): { x: number; y: number } {
-  return { x: simY * PX_PER_METRE, y: simX * PX_PER_METRE };
+  return { x: simX * PX_PER_METRE, y: simY * PX_PER_METRE };
 }
 
 export function resizeCanvasToCourt(
@@ -20,14 +20,14 @@ export function resizeCanvasToCourt(
   state: MatchState
 ): void {
   const { court } = state.config;
-  canvas.width = court.height * PX_PER_METRE;
-  canvas.height = court.width * PX_PER_METRE;
+  canvas.width = court.width * PX_PER_METRE;
+  canvas.height = court.height * PX_PER_METRE;
 }
 
 export function render(ctx: CanvasRenderingContext2D, state: MatchState): void {
   const { court } = state.config;
-  const canvasW = court.height * PX_PER_METRE;
-  const canvasH = court.width * PX_PER_METRE;
+  const canvasW = court.width * PX_PER_METRE;
+  const canvasH = court.height * PX_PER_METRE;
 
   ctx.fillStyle = "#1c3d2e";
   ctx.fillRect(0, 0, canvasW, canvasH);
@@ -39,8 +39,8 @@ export function render(ctx: CanvasRenderingContext2D, state: MatchState): void {
 
 function drawWalls(ctx: CanvasRenderingContext2D, state: MatchState): void {
   const { court } = state.config;
-  const canvasW = court.height * PX_PER_METRE;
-  const canvasH = court.width * PX_PER_METRE;
+  const canvasW = court.width * PX_PER_METRE;
+  const canvasH = court.height * PX_PER_METRE;
   const { min: goalMin, max: goalMax } = goalYRange(court);
   const goalMinPx = goalMin * PX_PER_METRE;
   const goalMaxPx = goalMax * PX_PER_METRE;
@@ -48,32 +48,30 @@ function drawWalls(ctx: CanvasRenderingContext2D, state: MatchState): void {
   ctx.strokeStyle = "#e8e8e8";
   ctx.lineWidth = 4;
 
-  // Side walls (sim y = 0 / y = height) are the untouched long edges —
-  // they land on the canvas's left and right after rotation.
+  // Top/bottom walls (sim y = 0 / y = height) are the untouched long edges.
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.lineTo(0, canvasH);
-  ctx.moveTo(canvasW, 0);
-  ctx.lineTo(canvasW, canvasH);
-
-  // End walls (sim x = 0 / x = width) carry the goal openings — they land
-  // on the canvas's top and bottom.
-  ctx.moveTo(0, 0);
-  ctx.lineTo(goalMinPx, 0);
-  ctx.moveTo(goalMaxPx, 0);
   ctx.lineTo(canvasW, 0);
   ctx.moveTo(0, canvasH);
-  ctx.lineTo(goalMinPx, canvasH);
-  ctx.moveTo(goalMaxPx, canvasH);
+  ctx.lineTo(canvasW, canvasH);
+
+  // Left/right walls (sim x = 0 / x = width) carry the goal openings.
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, goalMinPx);
+  ctx.moveTo(0, goalMaxPx);
+  ctx.lineTo(0, canvasH);
+  ctx.moveTo(canvasW, 0);
+  ctx.lineTo(canvasW, goalMinPx);
+  ctx.moveTo(canvasW, goalMaxPx);
   ctx.lineTo(canvasW, canvasH);
   ctx.stroke();
 
   ctx.strokeStyle = "#f4d35e";
   ctx.beginPath();
-  ctx.moveTo(goalMinPx, 0);
-  ctx.lineTo(goalMaxPx, 0);
-  ctx.moveTo(goalMinPx, canvasH);
-  ctx.lineTo(goalMaxPx, canvasH);
+  ctx.moveTo(0, goalMinPx);
+  ctx.lineTo(0, goalMaxPx);
+  ctx.moveTo(canvasW, goalMinPx);
+  ctx.lineTo(canvasW, goalMaxPx);
   ctx.stroke();
 }
 

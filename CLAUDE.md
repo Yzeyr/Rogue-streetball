@@ -379,12 +379,24 @@ them land wrong, nothing here is precious.
   they're in this run's 5) plus Market currency balance. Crew was already
   separately confirmed to carry over. Furthest cup/milestone reached is
   worth tracking as a stat even before it unlocks anything mechanical.
-- **Orientation: portrait, phone-first.** The court itself renders
-  vertically — goals at top and bottom, not left and right — rather than
-  squeezing a wide landscape court into a narrow viewport. No sim changes
-  needed: `CourtConfig` and the goal-on-x-axis physics in `physics.ts`
-  are untouched; `renderer.ts` maps sim space onto the canvas via a
-  `toScreen` transform instead. Implemented and verified in-browser.
+- **Orientation: landscape, goals left/right.** Portrait was tried first
+  (court rotated vertically, goals top/bottom) but reverted after seeing a
+  reference (a polished pixel-art football game, landscape, proper
+  scoreboard chrome) that made clear the intended feel is landscape, closer
+  to a broadcast-camera view of the pitch. **Explicitly overturning the
+  earlier portrait decision, not layering on top of it.** No sim changes
+  either time: `CourtConfig` and the goal-on-x-axis physics in
+  `physics.ts` never moved; only `renderer.ts`'s `toScreen` mapping
+  changed, and it's kept as a named function rather than inlined so
+  flipping orientation again stays a small, contained change. Verified
+  in-browser both ways.
+  **Still open, not yet decided:** the reference's art fidelity (drawn
+  pixel sprites, HUD chrome, crests) is a big step up from the current
+  placeholder rendering. Recommended next step is a low-lift, no-new-assets
+  version — small blocky pixel-style player silhouettes rendered at low
+  internal resolution and scaled up crisp/pixelated, instead of the
+  current wobbly blob polygons — with true drawn sprite sheets treated as
+  a separate, bigger art pass later. Not yet confirmed.
 
 ## 10. Open questions
 
