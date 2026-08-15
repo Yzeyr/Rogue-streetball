@@ -576,15 +576,28 @@ them land wrong, nothing here is precious.
     income stream. Spent at the Market. Supersedes the earlier "Market
     currency" name.
   - **Gems:** earned from season performance — how far/well a season
-    goes. **Open:** what Gems actually buy is undecided; a second
-    currency needs a real sink or it's currency for its own sake.
+    goes. **Spend confirmed:** permanent, account-wide buffs — i.e. a
+    cross-run meta-progression spend, not a run-scoped one like Perks.
+    Fits the shape already established for "most progress" (section 9):
+    Gems are another thing a bad run still banks toward the next one.
+    **Still open:** the actual catalog of what a permanent buff is (a
+    crew stat bump? cheaper Market prices? better pack odds? something
+    else) — not specced, don't build against a guess.
   - **PvP, Friends, Ranking — explicitly out of scope.** Confirms the
     single-player-only direction; not a small add if revisited later.
   - **Identity — cut**, not needed.
-  - **Altar, tentative direction only:** sacrifice a Player Card (as an
-    alternative to converting dupes into Coins) for "some sort of
-    reward" — the reward itself is undefined. Logged as a loose idea,
-    not a locked mechanic; don't build against this until it's specced.
+  - **Altar, direction confirmed, ratio tentative:** crafting, not just
+    sacrifice-for-currency — feed in several Player Cards of the same
+    rarity tier, get back one guaranteed card at the tier above (e.g.
+    5 Gray → 1 Blue). Deterministic on purpose: this is what makes it
+    feel different from just opening more packs, which only ever offers
+    a *chance* at a higher tier gated by pack tier. Resolves the earlier
+    "what does the Altar actually give back" open question.
+    **Still open:** exact sacrifice ratio ("5 into 1... or something" —
+    not locked), and whether the crafted card is random (consistent with
+    packs' blind-pull philosophy) or a choice (consistent with Market's
+    deliberate-choice role) — leaning random to keep Altar and Market
+    doing different jobs, but not confirmed.
   - **Legends, tentative, low complexity:** a stats/record screen —
     top scorers etc., tracked across the crew's history. A display
     feature, not a new mechanic.
@@ -594,11 +607,11 @@ them land wrong, nothing here is precious.
 Unresolved. Do not build against these until they're decided and moved to
 section 9.
 
-- **What do Gems actually buy?** Earning is settled (season performance);
-  spending isn't. Needs a real sink before it's more than a number that
-  goes up.
-- **What reward does the Altar give for a sacrificed Player Card?** The
-  mechanic's existence is a loose idea, not the payout.
+- **Catalog of permanent Gem-bought buffs.** Spend category is settled
+  (cross-run meta-progression); the actual list of buffs isn't.
+- **Altar sacrifice ratio, and whether the crafted card is random or
+  chosen.** Direction is settled (N same-tier cards → 1 guaranteed card
+  at the tier above); the ratio and randomness aren't locked.
 - **Match scoring at the real 60-second duration.** ~40% of a 10-seed
   headless sample came back 0-0 — flagged after the meta-game vertical
   slice shipped, not yet acted on. Needs a read on whether that's
