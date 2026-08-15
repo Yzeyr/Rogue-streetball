@@ -266,6 +266,31 @@ out explicitly.
   knockdown/turnover. **The restart is quick** — confirmed: ball respawns at
   the foul spot and resumes almost immediately, no real-time pause or
   animation, so it doesn't meaningfully eat into the ~1-minute watch time.
+- **New crew members come from packs, opened with the victory-milestone
+  reward** (closes part of the "what does a milestone bank" open question).
+  **Packs are fully random** — confirmed, overriding an earlier recommendation
+  toward a revealed choice-of-N. A pack reveals **3 player-cards**, all
+  received, none picked among.
+  **Note on pillar 5:** a blind pull is a step away from "draft choices
+  should be meaningful, not a stat roll" — flagging once since it's a
+  real tension, not re-litigating it since the call's been made.
+- **Additional player-acquisition channels, confirmed in scope: Market,
+  Youth Academy, Scouting**, alongside packs. Roles implied but not yet
+  specified: Market likely a currency spend on a specific, known player
+  (the deliberate-choice counterpart to blind packs); Youth Academy likely
+  slow-burn generation of new players over time; Scouting likely another
+  targeted-discovery channel.
+  **Scope flag:** four parallel acquisition systems (packs, market, academy,
+  scouting) is a lot of surface for a solo hobby project still in the
+  skeleton phase, on top of everything else already sketched (Cards,
+  Power-ups, Traits, Tactics, hazards, fouls, two-legged ties...).
+  Recommend designing and building packs first — it's the one with the
+  clearest shape — and treating the other three as a later pass once packs
+  prove out, rather than speccing all four now. Not yet confirmed.
+- **Player rarity tiers, confirmed:** Gray (common) → Blue (rare) → Purple
+  (epic) → Orange (legendary) → Diamond/sparkly (icon). This is the rarity
+  of an individual player-card pulled from a pack — separate from a pack's
+  own tier (Bronze/Silver/...).
 
 ## 10. Open questions
 
@@ -284,6 +309,31 @@ section 9.
   how many available per match, limited-use or cooldown-based, does
   triggering one pause the sim clock or run alongside it, and how does it
   relate to substitutions (same "manager button" category, or different)?
+- **Naming collision: "Card" now means two unrelated things.** (1) the
+  passive run-scoped power-up defined earlier (already in the vocab table
+  as **Card**), and (2) a player, represented as a collectible card with a
+  rarity tier, pulled from a pack (this round). Recommend renaming one
+  before this goes further — likely the power-up, since the card/rarity/pack
+  metaphor is clearly the player-facing one (e.g. rename the power-up to
+  **Perk** or **Boost**, keep **Card** for the player-collectible object).
+  Need a pick.
+- **Does pack tier gate player rarity, or just weight it?** E.g. can a
+  Bronze pack ever roll a Diamond icon (rare but possible), or are the top
+  rarities exclusive to higher pack tiers? Shapes the whole progression
+  curve — a gate makes pack tier the hard ceiling on what you can get, a
+  weight makes it just better odds.
+- **What does player rarity actually mean mechanically?** Flat stat power
+  (Diamond = objectively better numbers), or wilder/more build-defining
+  traits (Diamond = high-variance, build-around potential, not necessarily
+  "better")? The former risks a power-creep ladder where later pulls
+  obsolete the crew you already have — in tension with pillar 2 (every
+  crew member should stay a memorable, viable pick) and section 4's
+  explicit rule against flair being a dice-roll stat. Leaning toward rarity
+  = trait novelty/build-around potential rather than raw stat superiority,
+  but not decided.
+- **Duplicate pulls.** Fully random 3-card packs make duplicates inevitable.
+  Do they convert into a Market-spendable resource (closes a loop with the
+  new acquisition channels above), do nothing, or something else?
 - **Cup access:** what gates which cups are available — results, standing,
   something else — and is the choice between cups a real risk/reward tradeoff
   (harder cup, better draft pool)?
