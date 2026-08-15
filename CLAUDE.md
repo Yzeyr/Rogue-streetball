@@ -136,7 +136,8 @@ Use these consistently.
 | **Draft** | Post-match choice of upgrades, players, or perks |
 | **Trait** | A modifier attached to a footballer that alters sim behaviour |
 | **Tactic** | Crew-wide instruction affecting positioning and decision-making |
-| **Card** | A run-scoped power-up gained via a Draft; lost when the season ends. Unlike a Trait, not necessarily tied to one footballer |
+| **Card** | A passive, run-scoped modifier gained via a Draft; active for the rest of the season, lost when it ends. Unlike a Trait, not necessarily tied to one footballer |
+| **Power-up** | An active, in-match manager ability, triggered live rather than drafted passively. Separate resource from Cards |
 
 ## 8. Current status
 
@@ -205,7 +206,8 @@ out explicitly.
 - **Team size and court geometry stay parameterised** even though 5-a-side is
   settled, so the engine can be tuned and tested at other sizes.
 - **Match viewing:** real-time playback, a 3x fast-forward, or skip straight to
-  the result. A match takes roughly 2 real minutes to watch at normal speed.
+  the result. A match takes roughly **1 real minute** to watch at normal
+  speed (revised down from an earlier "~2 minutes" guess).
 - **In-match player agency: manager mode, not spectate-only.** The player can
   pause, adjust tactics, and substitute players during a match. Resolves the
   "player agency" open question in favour of active management over the
@@ -236,49 +238,52 @@ out explicitly.
   longer holds as written. "Finishable in one sitting" is not enforced by a
   match cap anymore; it'll have to come from something else (skip-to-result,
   fast drafts, escalating difficulty naturally ending most runs) if it's
-  still a goal at all. **Flagging a related conflict, not yet resolved:**
-  domain vocabulary (section 7) still defines a Run as ending "in death or
-  victory" — under this decision there is no victory state, only death. Need
-  to decide if that's intentional (pure endless/high-score structure) or if
-  a victory/retire point should still exist.
-- **Cards: run-scoped power-ups, not a foul-related concept.** Drafted during
-  a season (like existing stat boosts — e.g. tackle win%, shot accuracy,
-  stamina — up to "wilder" non-stat effects), lost when the season ends.
-  Distinct from **Traits** (permanent, tied to one footballer) — a Card is a
-  crew-level or match-level buff gained through the run. Confirmed as a
-  different concept from the fouls/cards question below; the word "cards"
-  meant two unrelated things and this resolves which is which.
+  still a goal at all.
+- **Victory exists, but as a milestone, not a run-ending state.** "Continuing
+  to play is the ultimate victory" — the season still only *ends* on a loss
+  (no fixed finish line). But hitting a milestone (exact trigger TBD — likely
+  clearing a cup, or every N cups) counts as a victory and banks something
+  extra into meta-progression to carry into the *next* season, on top of
+  whatever the crew/"most progress" baseline already carries over. Resolves
+  the section 7 tension flagged previously: a Run still ends only in death,
+  but "victory" is decoupled from run-ending and is now a checkpoint reward
+  instead. Section 7's Run definition should be reworded to match — not yet
+  done, wording depends on what a milestone reward actually is (see open
+  questions).
+- **Cards and power-ups are two separate systems**, not the same thing under
+  two names (an earlier log entry conflated them — corrected here):
+  - **Card:** a passive, run-scoped modifier picked via Draft between
+    matches (e.g. +tackle win%, +shot accuracy, +stamina, up to "wilder"
+    non-stat effects). Stays active for the rest of the season, lost when
+    the season ends. Distinct from a **Trait**, which is permanent and tied
+    to one footballer, not the run.
+  - **Power-up:** an active, in-match manager ability — e.g. "press a button,
+    team runs at 2x speed for the next 10 seconds." Triggered live during a
+    match rather than passively drafted. How power-ups are earned, how many
+    per match, and whether they're limited-use/cooldown-based is still open.
 - **Fouls exist, stop play, and have no disciplinary cards** (no bookings,
   no sendings-off) — a foul is a dead-ball restart (free kick), not a live
-  knockdown/turnover.
-  **This qualifies pillar 3 ("continuous play... no dead time"):** a foul
-  is now a deliberate, brief exception to "ball always live." Recommend
-  keeping the restart near-instant in implementation (ball respawns at the
-  foul spot and resumes within a tick or two, no real-time pause or
-  animation) so it doesn't meaningfully eat into the ~2-minute watch time —
-  not yet confirmed, see open questions.
+  knockdown/turnover. **The restart is quick** — confirmed: ball respawns at
+  the foul spot and resumes almost immediately, no real-time pause or
+  animation, so it doesn't meaningfully eat into the ~1-minute watch time.
 
 ## 10. Open questions
 
 Unresolved. Do not build against these until they're decided and moved to
 section 9.
 
-- **Run end-state: pure endless, or is there still a victory/retire point?**
-  Season-length decision (section 9) says a season only ends on loss — but
-  section 7 still defines a Run as ending in "death or victory." One of
-  those has to give: confirm this is deliberately endless/high-score, or
-  define what victory (or a bank-your-progress "retire") looks like.
-- **Foul restart length.** Fouls stop play (settled) — is the restart as
-  fast as proposed above (near-instant, no real pause), or should it read
-  more like an actual dead-ball moment players notice?
-- **Manager tactics: relationship to Cards.** The "press a button, team gets
-  2x speed for 10 seconds" idea reframes tactics as active, timed abilities
-  rather than persistent formation/mentality settings. Is an ability like
-  this drawn from the same Cards pool (drafted, then activated live during a
-  match), or a separate resource? Limited-use per match, or a cooldown?
-  Does using one pause the sim clock, or run alongside it? Still needs a
-  real design pass, including how it relates to substitutions (same
-  "manager button" category, or different).
+- **Victory milestone: what exactly triggers it, and what does it bank?**
+  Confirmed as a checkpoint concept (see section 9), not a run-ending state —
+  but the trigger (every cup? every N cups? something else) and the reward
+  (currency, a permanent unlock, a starting bonus next season) are both
+  still undefined. Section 7's Run definition needs rewording to match once
+  this lands.
+- **Power-ups need their own design pass.** Confirmed separate from Cards
+  (section 9) and confirmed as manager-triggered live abilities (e.g. "2x
+  speed for 10 seconds"), but: how are they earned/equipped before a match,
+  how many available per match, limited-use or cooldown-based, does
+  triggering one pause the sim clock or run alongside it, and how does it
+  relate to substitutions (same "manager button" category, or different)?
 - **Cup access:** what gates which cups are available — results, standing,
   something else — and is the choice between cups a real risk/reward tradeoff
   (harder cup, better draft pool)?
