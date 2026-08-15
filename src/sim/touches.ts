@@ -47,8 +47,10 @@ export interface TouchResult {
 }
 
 // A player takes control of the ball: shoot/pass/dribble via decideTouch,
-// then mark the ball as newly held by their team.
-function resolveTouch(
+// then mark the ball as newly held by their team. Exported so a goalkeeper
+// save (saves.ts) can hand control to the keeper the same way a touch or a
+// won tackle does — a save isn't a special case, it's just who touches it.
+export function resolveTouch(
   toucher: PlayerState,
   players: PlayerState[],
   ball: BallState,

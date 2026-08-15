@@ -4,6 +4,7 @@ import { buildFormation, formationTarget } from "./formation";
 import { rollAttributes } from "./attributes";
 import { movePlayers } from "./movement";
 import { applyTouches } from "./touches";
+import { attemptSave } from "./saves";
 import type { BallState, MatchConfig, MatchState, PlayerState, TeamId } from "./types";
 
 const BALL_RADIUS = 0.11; // metres, roughly a size-5 football
@@ -78,7 +79,8 @@ export function createMatch(config: MatchConfig): MatchState {
 export function tickMatch(state: MatchState): MatchState {
   const dt = 1 / state.config.tickRate;
 
-  const touched = applyTouches(state.ball, state.players, state.config.court, state.rngState);
+  const saved = attemptSave(state.ball, state.players, state.config.court, state.rngState);
+  const touched = applyTouches(saved.ball, state.players, state.config.court, saved.rngState);
   const { ball, scoredBy } = stepBall(touched.ball, state.config.court, dt);
 
   const score = scoredBy

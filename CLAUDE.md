@@ -161,7 +161,10 @@ Use these consistently.
   nearby opponent a Tackling-weighted chance to win it; `decision.ts` has
   the player in control choose shoot/pass/dribble via a utility score
   weighted by attributes, with Positioning-scaled noise, and executes it
-  as a ball velocity.
+  as a ball velocity. `saves.ts` gives a team's keeper a Goalkeeping-
+  weighted chance to stop a shot heading at their own goal, run before
+  `touches.ts` each tick; a save hands the keeper control the same way any
+  touch does.
 - `src/render/` — `renderer.ts` draws `MatchState` to a Canvas 2D context
   (walls, goal mouths, ball, players as blobs); `loop.ts` is an
   accumulator-driven fixed-timestep loop decoupling playback speed from
@@ -170,11 +173,10 @@ Use these consistently.
 - Team size (5) and court dimensions are `MatchConfig`/`CourtConfig` data,
   not baked-in constants; the formation builder is generic in team size too.
 
-**Explicitly stubbed, not decided yet:** no goalkeeper save mechanic, so a
-shot past the last defender always scores — matches are still
-high-scoring, see decision log. No fouls (tackling can fail, but nothing
-stops play on a mistimed one yet). Tactics aren't built. No menus, crew
-screens, or draft UI exist. No persistence yet.
+**Explicitly stubbed, not decided yet:** no rush-keeper behaviour (keeper
+never pushes forward — waiting on the Tactic system). No fouls (tackling
+can fail, but nothing stops play on a mistimed one yet). Tactics aren't
+built. No menus, crew screens, or draft UI exist. No persistence yet.
 
 ## 9. Decision log
 
@@ -439,11 +441,32 @@ them land wrong, nothing here is precious.
   costs the try — no foul roll on a mistimed tackle yet, since the actual
   foul/free-kick restart isn't built. That's a natural next hook once it
   is, not something to bolt on here.
-  **Still high-scoring, and now clearer why:** tackling reduced scoring
-  somewhat but matches are still very high-scoring — there's no
-  goalkeeper save mechanic yet (Goalkeeping attribute exists but isn't
-  read by anything), so a shot that beats the last defender is always a
-  goal. That's the next real gap, not a bug in this layer.
+- **Goalkeeper saves.** Closes the gap the previous entry flagged: a shot
+  no longer always scores just for beating the last outfield defender.
+  Every tick, if the ball is heading at a team's own goal and within reach
+  of their keeper (`saves.ts`, `SAVE_RADIUS` 2.2m), there's a per-tick
+  save chance weighted by Goalkeeping and keeper-to-ball distance — closer
+  shots easier to save, and the shrinking distance as the ball closes in
+  means a straight-on shot gets several chances, not one roll. A save is
+  not a special case: the keeper just takes control exactly like any
+  other touch (`touches.ts`'s `resolveTouch`, exported and reused
+  directly), so they immediately look to distribute using the same
+  shoot/pass/dribble decision every other touch uses — which naturally
+  reads as "catches it and throws it out," since a shoot attempt from
+  right in front of their own goal scores near-zero. No special-casing.
+  **This was called by Claude, not negotiated** ("the AI decides every
+  decision from here" — noted at the top of this batch too), so recorded
+  with the same "flag if it lands wrong" caveat as the earlier
+  liberties-taken batch.
+  **Verified:** ran `simulateMatch` headlessly across 8 different seeds
+  before vs. after. Before: every seed was a double-digit rout (e.g.
+  10-11, 6-11). After: every seed lands in a believable 0-5 goals per
+  team range. Confirmed in-browser too, no runtime errors.
+  **Still open:** no rush-keeper behaviour (leaving the goal to join
+  attack) — the keeper's formation slot still just holds a tight line, it
+  doesn't push out under any tactic trigger. That's the already-settled
+  two-layer rush-keeper design (tactic trigger + trait) waiting on the
+  Tactic system existing at all. Not needed for this pass.
 
 ## 10. Open questions
 
