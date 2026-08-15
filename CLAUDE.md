@@ -326,37 +326,73 @@ out explicitly.
   that start), not a problem, but worth confirming that's the intent rather
   than assuming.
 
+The following batch was called by Claude rather than negotiated line by
+line, at explicit invitation ("take some liberties... we can adjust as we
+go"). Recorded with the same weight as anything above — flag if any of
+them land wrong, nothing here is precious.
+
+- **Victory milestone trigger and reward.** Triggers on clearing a cup
+  (winning the boss match) — reuses the existing cup structure instead of
+  adding a new counter. Reward is a Pack, tier scaling with how many cups
+  this run has cleared: 1st clear → Bronze, 2nd → Silver, 3rd+ → Gold. This
+  was already implied (packs were confirmed as *the* milestone reward
+  mechanism a few rounds back) — this just pins down when and at what tier.
+- **Power-up mechanics.** A small fixed toolkit (2-3 power-ups) available
+  from the start of every run — no separate unlock/acquisition system,
+  deliberately, to avoid a fifth acquisition system stacked on
+  packs/market/academy/scouting. Equip up to 2 per match. Each is
+  single-use per match, not cooldown-based — matches run ~1 real minute, so
+  a 10-second effect rarely has room to fire twice anyway. Triggering one
+  does **not** pause the sim clock — it's a live, temporary modifier to sim
+  parameters for its duration, keeping pillar 3 (continuous play) intact.
+  Substitutions are a separate manager-mode category from power-ups:
+  limited by bench size, not uses or cooldowns. Expanding the power-up
+  roster via unlocks later is a fine future addition, not needed now.
+- **Cup access.** After clearing a cup, the next choice is between 2-3
+  cups that trade difficulty for reward (tougher opposition for a better
+  pack tier or bonus). The gate is simply how many cups you've cleared
+  this run — no separate reputation/standing stat to track. Delivers the
+  risk/reward lever the original run-structure decision wanted, without a
+  new resource.
+- **Power play trigger presets.** A fixed list to start: Never / Losing
+  late / Losing at any point / Always. Set as a pre-match tactic choice.
+  Not draftable content yet — a fine stretch goal, not needed for the
+  skeleton.
+- **Player attributes: seven.** Pace, Shooting, Passing, Tackling,
+  Positioning, Stamina, Goalkeeping. Kept small on purpose — pillar 6
+  (readable at phone size) and section 4 (flair should come from traits
+  bending these, not a hidden dice-roll stat). Goalkeeping earns a slot
+  because rush-keeper means any of the five could end up covering the net,
+  not just a designated starter — it's also how the already-settled
+  sweeper-keeper-vs-shot-stopper trait layer actually gets expressed (high
+  Passing+Pace+Goalkeeping vs. high Goalkeeping alone). Exact formulas
+  mapping attributes to sim outcomes (shot accuracy curve, tackle win%,
+  etc.) are implementation detail for later.
+- **Initial court hazards: Pillars and Wet patches.** Pillars are fixed
+  circular obstacles with wall-like rebound physics, placed mid-court. Wet
+  patches are zones that reduce ball friction and/or player grip, raising
+  stumble/foul chance. Slopes (a constant force vector biasing ball
+  movement) are deferred — meaningfully harder physics to get right, not
+  needed for a first pass.
+- **"Most progress" concretely means:** the unlocked Player Card pool
+  (every footballer ever acquired through any channel, whether or not
+  they're in this run's 5) plus Market currency balance. Crew was already
+  separately confirmed to carry over. Furthest cup/milestone reached is
+  worth tracking as a stat even before it unlocks anything mechanical.
+- **Orientation: portrait, phone-first.** The court itself renders
+  vertically — goals at top and bottom, not left and right — rather than
+  squeezing a wide landscape court into a narrow viewport. No sim changes
+  needed: `CourtConfig` and the goal-on-x-axis physics in `physics.ts`
+  don't have to change, since this is purely how the renderer maps sim
+  space onto the canvas. Not yet implemented.
+
 ## 10. Open questions
 
 Unresolved. Do not build against these until they're decided and moved to
 section 9.
 
-- **Victory milestone: what exactly triggers it, and what does it bank?**
-  Confirmed as a checkpoint concept (see section 9), not a run-ending state —
-  but the trigger (every cup? every N cups? something else) and the reward
-  (currency, a permanent unlock, a starting bonus next season) are both
-  still undefined. Section 7's Run definition needs rewording to match once
-  this lands.
-- **Power-ups need their own design pass.** Confirmed separate from Perks
-  (section 9) and confirmed as manager-triggered live abilities (e.g. "2x
-  speed for 10 seconds"), but: how are they earned/equipped before a match,
-  how many available per match, limited-use or cooldown-based, does
-  triggering one pause the sim clock or run alongside it, and how does it
-  relate to substitutions (same "manager button" category, or different)?
-- **Cup access:** what gates which cups are available — results, standing,
-  something else — and is the choice between cups a real risk/reward tradeoff
-  (harder cup, better draft pool)?
-- **Power play triggers:** the exact set of trigger conditions the player can
-  choose from (never / losing late / losing at all / always — or something
-  else), and whether the trigger set is itself draftable content.
-- **Player model:** how many attributes, and how directly do they drive sim
-  decisions?
-- **Which court hazards, specifically** — pillars, slopes, wet patches,
-  something else — and how each affects ball/player physics.
-- **Meta-progression specifics.** Confirmed something carries between runs
-  (crew, "most progress"); not yet specified what "most progress" concretely
-  includes.
-- **Orientation:** portrait or landscape.
+*(Empty for now — the previous batch was cleared out in one pass above.
+Re-populate as new questions come up.)*
 
 ## 11. How to start a session
 
