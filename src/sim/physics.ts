@@ -17,6 +17,19 @@ export function stepBall(
   let { x, y, vx, vy } = ball;
   const { radius } = ball;
 
+  // Rolling friction: constant deceleration along the current direction of
+  // travel (not a proportional decay), so a hard shot and a gentle trickle
+  // both bleed speed at the same real-world rate. Without this the ball
+  // glides at constant velocity between touches/bounces, which is what
+  // read as "floaty."
+  const speed = Math.hypot(vx, vy);
+  if (speed > 0) {
+    const nextSpeed = Math.max(0, speed - court.ballFriction * dt);
+    const scale = nextSpeed / speed;
+    vx *= scale;
+    vy *= scale;
+  }
+
   x += vx * dt;
   y += vy * dt;
 

@@ -7,6 +7,11 @@ export interface CourtConfig {
   height: number; // metres, along y
   goalWidth: number; // metres, centred on each end wall
   wallRestitution: number; // 0..1, energy kept on a wall bounce
+  // Rolling-friction deceleration, m/s^2, applied to the ball every tick
+  // regardless of walls/touches. A CourtConfig field (not a global
+  // constant) so a future hazard like a wet patch can drop grip in one
+  // zone without the physics function needing to change.
+  ballFriction: number;
 }
 
 export interface BallState {

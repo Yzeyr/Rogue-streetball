@@ -759,6 +759,65 @@ them land wrong, nothing here is precious.
   (2-3 next cups) — each flagged in its own decision-log entry earlier as
   a real system in its own right, not rushed into this pass alongside
   everything else.
+- **Ball has rolling friction now** ("the ball is very floaty, doesn't act
+  like a real ball at all"). Root cause: `physics.ts`'s `stepBall` only
+  ever changed the ball's velocity on a wall bounce — between bounces and
+  touches it held constant velocity forever, i.e. it never slowed down.
+  Fixed with a constant deceleration (not a proportional decay, so a hard
+  shot and a gentle trickle both lose speed at the same real-world rate)
+  applied every tick regardless of walls/touches. Added as a `CourtConfig`
+  field, `ballFriction` (m/s²), rather than a hardcoded constant — the
+  already-planned "wet patch reduces ball friction" hazard (section 9,
+  "Initial court hazards") will need per-zone friction anyway, so this
+  makes that hook free later instead of a refactor. `DEFAULT_COURT` sets
+  it to 3.5 m/s².
+  **This uncovered two real, previously-invisible bugs, both fixed
+  alongside it, not deferred:**
+  - **Nobody actually chased a loose ball.** `formationTarget` only
+    elastically shifts a player's formation *slot* toward the ball by a
+    bounded fraction — it never targets the ball's actual position. This
+    was invisible before because a frictionless ball never stopped
+    moving, so it eventually swept through someone's shifted slot by
+    chance. Once the ball can come to rest in open space, nobody
+    converged on it and matches stalled at 0-0 forever (confirmed
+    headlessly: a 10-seed sweep at the real 60s duration came back 10/10
+    scoreless after adding friction alone). Fixed in `movement.ts`: when
+    the ball is loose (no carrier, cooldown elapsed), each team's single
+    closest player breaks off formation and targets the ball directly —
+    the same override pattern already used for the dribble carrier
+    (`carrierTarget`), not a new full-team utility-AI pass, so this
+    doesn't reopen the "ball-chasing swarm" risk the hybrid architecture
+    was chosen to avoid (see decision log, player movement/decision-making
+    architecture).
+  - **`ball.carrierId` went stale.** `touches.ts`'s `resolveFreeBall`
+    left `carrierId` untouched when nobody was in range to claim the
+    ball — so a player who had dribbled it, then physically moved away
+    (or the ball stopped short under friction) stayed marked as the
+    carrier indefinitely. `movement.ts` kept sending that player straight
+    at goal instead of back to the ball, and the new loose-ball chase
+    above never engaged (it's gated on `carrierId === null`), because the
+    ball was never considered loose. Fixed by clearing `carrierId` in
+    `resolveFreeBall` when no toucher is found in range.
+  **Verified:** headless traces (ball position/speed/nearest-player-
+  distance over a full match) confirmed the ball no longer parks
+  permanently; the 10-seed 60s scoring sweep returned to a healthy mix
+  (6/10 scoring, 4/10 scoreless — matching, not worse than, the
+  already-flagged open question below on 60s scorelessness); an 8-seed
+  240s sweep stayed in the previously-verified 0-5-goals-a-side range;
+  the separation check still holds players at the 0.75m floor; browser
+  automation at 1x speed showed no console errors and a ball that
+  visibly slows and gets contested rather than gliding. **One real
+  balance shift, flagged not silently absorbed:** the action-mix check
+  (shoot/pass/dribble share) moved from the previously-landed 16-24%
+  dribble / 41-45% pass / 31-41% shoot to roughly 29-41% / 32-43% /
+  27-29% — friction pulls a dribbled ball up short more often, so a
+  "carry" now reads as more, shorter close-control touches rather than
+  one long sustained run (longest single-carrier streak dropped from the
+  previously-measured 4.5-6s to ~0.7s in the same check). Left untouched
+  rather than retuned, since the resulting mix is still healthy (no
+  action near-zero or dominant) and retuning wasn't asked for — worth a
+  look if shorter dribble spells read wrong once there's real art to
+  watch it with.
 
 ## 10. Open questions
 

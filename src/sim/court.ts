@@ -5,6 +5,7 @@ export const DEFAULT_COURT: CourtConfig = {
   height: 12,
   goalWidth: 3,
   wallRestitution: 0.8,
+  ballFriction: 3.5,
 };
 
 export function goalYRange(court: CourtConfig): { min: number; max: number } {

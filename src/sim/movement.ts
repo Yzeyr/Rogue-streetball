@@ -1,5 +1,5 @@
 import { formationTarget } from "./formation";
-import type { BallState, CourtConfig, PlayerState } from "./types";
+import type { BallState, CourtConfig, PlayerState, TeamId } from "./types";
 
 const MIN_SPEED = 3.0; // m/s, at 0 pace
 const MAX_SPEED = 6.5; // m/s, at 100 pace
@@ -20,6 +20,29 @@ function clamp(value: number, min: number, max: number): number {
 function carrierTarget(player: PlayerState, court: CourtConfig): { x: number; y: number } {
   const goalX = player.team === "home" ? court.width : 0;
   return { x: clamp(goalX, 0.6, court.width - 0.6), y: clamp(player.y, 0.6, court.height - 0.6) };
+}
+
+// A loose ball (no carrier, not mid-tackle-contest) used to still get
+// collected because a frictionless ball never stopped moving — it would
+// eventually sweep through someone's formation shift by chance. Real
+// friction means it can now come to rest in open space, so each team's
+// closest player has to actually break off and close it down, the same
+// way carrierTarget breaks the dribbler off their slot.
+function nearestTo(players: PlayerState[], point: { x: number; y: number }): PlayerState | null {
+  let closest: PlayerState | null = null;
+  let closestDist = Infinity;
+  for (const player of players) {
+    const dist = Math.hypot(player.x - point.x, player.y - point.y);
+    if (dist < closestDist) {
+      closest = player;
+      closestDist = dist;
+    }
+  }
+  return closest;
+}
+
+function loneBallTarget(court: CourtConfig, ball: BallState): { x: number; y: number } {
+  return { x: clamp(ball.x, 0.6, court.width - 0.6), y: clamp(ball.y, 0.6, court.height - 0.6) };
 }
 
 function seekTarget(
@@ -104,16 +127,26 @@ export function movePlayers(
   ball: BallState,
   dt: number
 ): PlayerState[] {
+  const ballIsLoose = ball.carrierId === null && ball.touchCooldown <= 0;
+  const chaserIds: Record<TeamId, string | null> = { home: null, away: null };
+  if (ballIsLoose) {
+    chaserIds.home = nearestTo(players.filter((p) => p.team === "home"), ball)?.id ?? null;
+    chaserIds.away = nearestTo(players.filter((p) => p.team === "away"), ball)?.id ?? null;
+  }
+
   const moved = players.map((player) => {
+    const isChaser = player.id === chaserIds.home || player.id === chaserIds.away;
     const target =
       player.id === ball.carrierId
         ? carrierTarget(player, court)
-        : formationTarget(
-            { role: player.role, xFraction: player.homeXFraction, yFraction: player.homeYFraction },
-            player.team,
-            court,
-            ball
-          );
+        : isChaser
+          ? loneBallTarget(court, ball)
+          : formationTarget(
+              { role: player.role, xFraction: player.homeXFraction, yFraction: player.homeYFraction },
+              player.team,
+              court,
+              ball
+            );
 
     return seekTarget(player, target, dt);
   });

@@ -133,7 +133,14 @@ function resolveFreeBall(
     players.filter((p) => distance(ball, p) <= CONTROL_RADIUS)
   );
   if (!toucher) {
-    return { ball, rngState };
+    // Nobody's in range to claim it — including, possibly, the player
+    // ball.carrierId still names from an earlier dribble touch. Without
+    // clearing it here, a carrier who has physically moved away from a
+    // now-stopped ball stays marked as its carrier forever: movement.ts
+    // would keep sending them at goal instead of back to the ball, and
+    // nobody else is dispatched to chase a ball movement thinks is still
+    // held. Only a genuinely loose ball (carrierId null) gets chased.
+    return ball.carrierId ? { ball: { ...ball, carrierId: null }, rngState } : { ball, rngState };
   }
   return resolveTouch(toucher, players, ball, court, rngState);
 }
