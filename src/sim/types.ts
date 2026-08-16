@@ -69,6 +69,12 @@ export interface MatchConfig {
   teamSize: number;
   tickRate: number; // sim ticks per second
   durationSeconds: number; // sim time; ~60 reads as ~1 real minute at 1x (see decision log)
+  // Cup tie-break mode (see decision log: "sudden death, next goal wins" —
+  // chosen over a penalty shootout to keep the ball-always-live rule
+  // intact through the tie-break too). When set, isMatchComplete ends the
+  // match the instant either side scores; durationSeconds still applies
+  // as a safety-net cap.
+  suddenDeath?: boolean;
 }
 
 export interface MatchState {

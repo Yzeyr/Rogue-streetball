@@ -170,34 +170,56 @@ Use these consistently.
   `MatchConfig` now carries `durationSeconds` (60, ~1 real minute at 1x
   per the decision log) and `isMatchComplete` is a plain query on
   `MatchState` — `tickMatch` itself still has no notion of "done."
-  `createMatch`/`simulateMatch` take an optional `homeAttributes` array
-  (the sim's own `PlayerAttributes` type) so a meta-game Crew can supply
-  the home team's stats; sim stays unaware Crew exists at all.
+  It also carries an optional `suddenDeath` flag (match ends the instant
+  either side scores, `durationSeconds` still a safety-net cap) for the
+  cup tie-break rule. `createMatch`/`simulateMatch` take optional
+  `homeAttributes`/`awayAttributes` arrays (the sim's own
+  `PlayerAttributes` type) so a meta-game Crew and a persisted cup
+  opponent can supply either side's stats; sim stays unaware Crew or Cup
+  exist at all.
 - `src/render/` — `renderer.ts` draws `MatchState` to a Canvas 2D context
   (walls, goal mouths, ball, players as blobs); `loop.ts` is an
   accumulator-driven fixed-timestep loop decoupling playback speed from
   wall-clock frame rate (1x/4x buttons wired in `main.ts`). Landscape,
   goals left/right.
-- `src/meta/` — first vertical slice of the roguelike layer. `crew.ts`
-  has a hand-authored 5-player `STARTER_CREW` (named, not rolled) feeding
-  the sim's `PlayerAttributes`; `perks.ts` is a small hand-authored Perk
-  pool applied crew-wide; `run.ts` is a thin `RunState` (crew + win/loss
-  record) with no cups, currency, or persistence yet.
-- `src/main.ts` now drives a real screen flow instead of loading straight
-  into a match: home (crew list, "Start run") → match (existing sim/
-  render, unchanged) → result → draft (pick 1 of 3 Perks) → next match,
-  looping indefinitely. Verified end-to-end in-browser, no console errors.
+- `src/meta/` — the roguelike layer, now with real cup structure.
+  `crew.ts` has a hand-authored 5-player `STARTER_CREW` (named, not
+  rolled) feeding the sim's `PlayerAttributes`; `perks.ts` is a small
+  hand-authored Perk pool applied crew-wide; `opponent.ts` generates a
+  rival squad (its own `Math.random()`-seeded stream, not the sim's —
+  see decision log); `cup.ts` implements the settled 5-round shape
+  (two-legged aggregate ties, boss round, sudden-death tie-break) as a
+  pure state machine (`advanceCup`/`resolveSuddenDeath`) that a screen
+  layer drives; `run.ts`'s `RunState` now carries real cup progress,
+  `cupsCleared`, and a placeholder `coins` reward (packs don't exist
+  yet, so Coins stand in for the real milestone reward for now).
+- `src/main.ts` drives the full screen flow: home (crew list, "Start
+  run") → match (status line shows round/leg or "Boss"/"Sudden death")
+  → result (leg complete / tie won / cup cleared / sudden death needed)
+  → draft (pick 1 of 3 Perks, skipped before a sudden-death decider) →
+  next match — looping through an entire cup and chaining into the next
+  one on a clear, until a lost tie or the boss ends the run outright,
+  landing on a distinct Run Over screen with final stats and "Start new
+  run." Verified via both live UI automation (leg completion, round
+  advancement, sudden death triggering and resolving, aggregate and
+  sudden-death losses, all with no console errors) and direct unit
+  checks of the state machine (boss win/loss/draw-then-sudden-death,
+  milestone reward scaling across cup clears).
 - Team size (5) and court dimensions are `MatchConfig`/`CourtConfig` data,
   not baked-in constants; the formation builder is generic in team size too.
 
-**Explicitly stubbed, not decided yet:** no cups/season structure yet —
-the loop above is just "next match forever," not the settled two-legged-
-tie cup shape. No packs, Market, rarity, or Player Cards — the crew is
-one fixed hand-authored roster, no acquisition system. No persistence
-(a page refresh loses the run). No rush-keeper behaviour (keeper never
-pushes forward — waiting on the Tactic system). No fouls (tackling can
-fail, but nothing stops play on a mistimed one yet). Tactics, power-ups,
-and substitutions aren't built.
+**Explicitly stubbed, not decided yet:** cup access (no choice between
+2-3 next cups yet — clearing a cup always starts a fresh one
+immediately). No packs, Market, rarity, or Player Cards — the crew is
+one fixed hand-authored roster, no acquisition system, and the milestone
+reward is placeholder Coins rather than a real Pack. No persistence (a
+page refresh loses the run). No court variety — two-legged ties are
+structurally real (aggregate, alternating conceptual "home"), but every
+leg still plays on the same `DEFAULT_COURT`, so the settled "different
+court per leg" flavour isn't visible yet. No rush-keeper behaviour
+(keeper never pushes forward — waiting on the Tactic system). No fouls
+(tackling can fail, but nothing stops play on a mistimed one yet).
+Tactics, power-ups, and substitutions aren't built.
 
 ## 9. Decision log
 
@@ -601,6 +623,46 @@ them land wrong, nothing here is precious.
   - **Legends, tentative, low complexity:** a stats/record screen —
     top scorers etc., tracked across the crew's history. A display
     feature, not a new mechanic.
+- **Cup structure, implemented.** The settled 5-round shape (section 9,
+  "Cup shape") is now real code, not just a description: `meta/cup.ts`'s
+  `advanceCup`/`resolveSuddenDeath` are a pure state machine — two-legged
+  aggregate ties for rounds 1-4, a single boss match for round 5, sudden
+  death on a level aggregate or a drawn boss, cup loss ending the run
+  outright and chaining into a fresh cup on a clear. `main.ts` drives it
+  through the existing screens (a status line on the match screen, a
+  contextual result screen, Run Over as a new distinct screen).
+  **Two honest simplifications, not full features yet:**
+  - **Cup access wasn't built.** The settled "choose between 2-3 next
+    cups, trading difficulty for reward" doesn't exist — clearing a cup
+    always starts a fresh one immediately, no choice offered.
+  - **"Different court per leg" isn't visible.** The two-legged-tie
+    *structure* is real (aggregate score, a persistent opponent across
+    both legs), but every leg still plays on the same `DEFAULT_COURT` —
+    court variety doesn't exist in code yet, so the flavour that's
+    supposed to make two legs feel distinct isn't there yet.
+  **Milestone reward is a placeholder.** Clearing a cup grants Coins
+  (scaling with cups cleared this run), not a Pack — packs/rarity/Player
+  Cards don't exist in code yet. `cup.ts`'s `cupClearReward` is
+  explicitly commented as standing in for the real reward.
+  **Sim change to support it:** `createMatch`/`simulateMatch` now also
+  take an optional `awayAttributes` array (mirroring the existing
+  `homeAttributes`), so the same generated opponent can be reused across
+  both legs of a tie — the sim still has no idea "Cup" exists, it's just
+  handed two attribute arrays instead of one.
+  **Verified two ways:** live UI automation (clicking through leg
+  completion, round advancement, sudden death triggering and resolving,
+  losses via both aggregate and sudden death, all with zero console
+  errors across several full runs) and direct unit checks of the state
+  machine for the branches random play didn't happen to hit (boss win,
+  boss loss, a drawn boss going to sudden death and resolving, reward
+  scaling across consecutive cup clears).
+  **One real bug caught by testing, fixed:** the run-over branch for a
+  lost tie wasn't attaching the just-computed aggregate score to the
+  returned state, so the Run Over screen would display a stale
+  pre-leg-2 aggregate (surfaced as a confusing "Lost 0-0" after a leg
+  that was actually lost on aggregate). Fixed in `advanceCup`, and the
+  Run Over screen now shows the aggregate for a tie loss rather than
+  just the deciding leg's own score.
 
 ## 10. Open questions
 

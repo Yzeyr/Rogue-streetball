@@ -14,7 +14,8 @@ function spawnPlayers(
   rngState: RngState,
   config: MatchConfig,
   ball: BallState,
-  homeAttributes?: PlayerAttributes[]
+  homeAttributes?: PlayerAttributes[],
+  awayAttributes?: PlayerAttributes[]
 ): [players: PlayerState[], next: RngState] {
   const players: PlayerState[] = [];
   const teams: TeamId[] = ["home", "away"];
@@ -23,7 +24,7 @@ function spawnPlayers(
   for (const team of teams) {
     const formation = buildFormation(config.teamSize);
     formation.forEach((slot, i) => {
-      const provided = team === "home" ? homeAttributes?.[i] : undefined;
+      const provided = (team === "home" ? homeAttributes : awayAttributes)?.[i];
       let attributes: PlayerAttributes;
       if (provided) {
         attributes = provided;
@@ -68,15 +69,21 @@ function kickoffBall(
   return [ball, s2];
 }
 
-// homeAttributes lets a meta-game Crew (see src/meta/) supply the home
-// team's stats instead of the placeholder random roll — the sim itself
-// stays unaware that "Crew" exists at all, it just takes an optional
-// array of its own PlayerAttributes type. Away is always randomly rolled
-// (a generated opponent), same as before.
-export function createMatch(config: MatchConfig, homeAttributes?: PlayerAttributes[]): MatchState {
+// homeAttributes/awayAttributes let a meta-game Crew or a persisted cup
+// opponent (see src/meta/) supply either side's stats instead of the
+// placeholder random roll — the sim itself stays unaware that "Crew" or
+// "cup tie" exist at all, it just takes optional arrays of its own
+// PlayerAttributes type. A side left unset is randomly rolled, as before
+// — this is how a fresh, one-off opponent still gets generated when no
+// fixed roster is supplied.
+export function createMatch(
+  config: MatchConfig,
+  homeAttributes?: PlayerAttributes[],
+  awayAttributes?: PlayerAttributes[]
+): MatchState {
   const rngState = createRng(config.seed);
   const [ball, rngAfterBall] = kickoffBall(rngState, config);
-  const [players, rngAfterPlayers] = spawnPlayers(rngAfterBall, config, ball, homeAttributes);
+  const [players, rngAfterPlayers] = spawnPlayers(rngAfterBall, config, ball, homeAttributes, awayAttributes);
   return {
     config,
     tick: 0,
@@ -118,18 +125,26 @@ export function tickMatch(state: MatchState): MatchState {
   };
 }
 
-// A match is over once it's run its configured duration — a query on the
-// state, not a special tick, so tickMatch stays a plain per-tick step with
-// no notion of "done." Whoever drives the loop (real-time or headless)
-// decides what to do once this is true.
+// A match is over once it's run its configured duration, or — in sudden
+// death — the instant either side leads. A query on the state, not a
+// special tick, so tickMatch stays a plain per-tick step with no notion
+// of "done." Whoever drives the loop (real-time or headless) decides
+// what to do once this is true.
 export function isMatchComplete(state: MatchState): boolean {
+  if (state.config.suddenDeath && (state.score.home > 0 || state.score.away > 0)) {
+    return true;
+  }
   return state.elapsedSeconds >= state.config.durationSeconds;
 }
 
 // Runs the match to completion with no renderer attached, proving sim and
 // render are fully decoupled. Used for instant-result simulation.
-export function simulateMatch(config: MatchConfig, homeAttributes?: PlayerAttributes[]): MatchState {
-  let state = createMatch(config, homeAttributes);
+export function simulateMatch(
+  config: MatchConfig,
+  homeAttributes?: PlayerAttributes[],
+  awayAttributes?: PlayerAttributes[]
+): MatchState {
+  let state = createMatch(config, homeAttributes, awayAttributes);
   while (!isMatchComplete(state)) {
     state = tickMatch(state);
   }

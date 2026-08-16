@@ -93,11 +93,16 @@ h2 {
   margin: 0;
 }
 
-#result-record {
+#result-record,
+#run-over-stats {
   text-align: center;
   color: #8fa39a;
   font-size: 0.85rem;
   margin: 0;
+}
+
+#match-status {
+  margin-top: -6px;
 }
 
 #perk-options {
