@@ -1,4 +1,5 @@
 import { generateOpponent } from "./opponent";
+import { packTierForCupClear, type PackTier } from "./pack";
 import type { PlayerAttributes } from "../sim/types";
 import type { RunState } from "./run";
 
@@ -26,13 +27,6 @@ export function startCup(teamSize: number): CupProgress {
   };
 }
 
-// Placeholder milestone reward until packs exist. The real reward is a
-// Pack (tier scaling Bronze/Silver/Gold with cups cleared this run, per
-// the decision log) — Coins stand in for that until packs are built.
-export function cupClearReward(cupsClearedAfterThis: number): number {
-  return 20 + cupsClearedAfterThis * 10;
-}
-
 export type CupOutcome =
   | "leg-complete" // leg 1 of a tie done, leg 2 still to come
   | "advance-round" // tie (or non-boss round) won, next round begins
@@ -43,6 +37,10 @@ export type CupOutcome =
 export interface CupAdvanceResult {
   run: RunState;
   outcome: CupOutcome;
+  // Set only when outcome is "cup-cleared" — the caller opens this pack
+  // against the persistent PlayerProfile (see profile.ts). Cup progress
+  // itself stays free of collection/currency concerns.
+  packTier?: PackTier;
 }
 
 function nextRoundProgress(round: number, teamSize: number): CupProgress {
@@ -73,13 +71,9 @@ export function advanceCup(
     }
     if (homeScore > awayScore) {
       return {
-        run: {
-          ...run,
-          cupsCleared: run.cupsCleared + 1,
-          coins: run.coins + cupClearReward(run.cupsCleared + 1),
-          cup: startCup(teamSize),
-        },
+        run: { ...run, cupsCleared: run.cupsCleared + 1, cup: startCup(teamSize) },
         outcome: "cup-cleared",
+        packTier: packTierForCupClear(run.cupsCleared + 1),
       };
     }
     return { run: { ...run, over: true }, outcome: "run-over" };
@@ -128,13 +122,9 @@ export function resolveSuddenDeath(
   }
   if (run.cup.round === 5) {
     return {
-      run: {
-        ...run,
-        cupsCleared: run.cupsCleared + 1,
-        coins: run.coins + cupClearReward(run.cupsCleared + 1),
-        cup: startCup(teamSize),
-      },
+      run: { ...run, cupsCleared: run.cupsCleared + 1, cup: startCup(teamSize) },
       outcome: "cup-cleared",
+      packTier: packTierForCupClear(run.cupsCleared + 1),
     };
   }
   return {

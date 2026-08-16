@@ -1,10 +1,12 @@
-import { STARTER_CREW, type Crew } from "./crew";
+import type { Crew } from "./crew";
 import { startCup, type CupProgress } from "./cup";
 
-// Now carries real cup progress (see project decision log for the full
-// shape). Still no persistence — a page refresh loses the run — and no
-// packs/Player Cards; Coins exist only as a placeholder milestone reward
-// until packs are built.
+// Carries real cup progress (see project decision log for the full
+// shape). Deliberately no currency here anymore — Coins/Gems and the
+// Player Card collection live on the persistent PlayerProfile (see
+// profile.ts), since they carry over between runs; RunState is what
+// resets. Still no persistence for RunState itself — a page refresh
+// loses the in-progress run.
 export interface RunState {
   crew: Crew;
   matchesPlayed: number;
@@ -12,20 +14,20 @@ export interface RunState {
   losses: number;
   draws: number;
   cupsCleared: number;
-  coins: number;
   cup: CupProgress;
   over: boolean;
 }
 
-export function createRunState(teamSize: number): RunState {
+// crew is the squad chosen on the Squad screen (see profile.ts /
+// meta/squad selection) — RunState no longer hardcodes STARTER_CREW.
+export function createRunState(teamSize: number, crew: Crew): RunState {
   return {
-    crew: STARTER_CREW,
+    crew,
     matchesPlayed: 0,
     wins: 0,
     losses: 0,
     draws: 0,
     cupsCleared: 0,
-    coins: 0,
     cup: startCup(teamSize),
     over: false,
   };

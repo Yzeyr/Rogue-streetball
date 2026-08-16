@@ -1,24 +1,21 @@
-import type { PlayerAttributes } from "../sim/types";
-
-export interface CrewMember {
-  id: string;
-  name: string;
-  attributes: PlayerAttributes;
-}
+import type { PlayerCard } from "./playerCard";
 
 // Fixed length 5, positional: crew[0] plays keeper, crew[1-2] back,
 // crew[3-4] forward, matching formation.ts's slot order for team size 5.
 // Assigning your own formation is a later refinement, not needed here.
-export type Crew = CrewMember[];
+export type Crew = PlayerCard[];
 
-// Hand-authored, not rolled — real generation (packs, rarity) is a later
-// system. Attributes are picked to give each player a rough identity, so
-// the crew reads as five people with a role, not five interchangeable
-// stat blocks (pillar 2).
+// Hand-authored, not rolled — seeds a fresh profile's collection (see
+// profile.ts). Attributes are picked to give each starter a rough
+// identity, so the crew reads as five people with a role from the very
+// first run, not five interchangeable stat blocks (pillar 2). All start
+// Gray with no trait — real variety comes from packs/rarity from here.
 export const STARTER_CREW: Crew = [
   {
     id: "starter-keeper",
     name: "Mo Okafor",
+    rarity: "gray",
+    trait: null,
     attributes: {
       pace: 45,
       shooting: 30,
@@ -32,6 +29,8 @@ export const STARTER_CREW: Crew = [
   {
     id: "starter-back-1",
     name: "Deniz Aksoy",
+    rarity: "gray",
+    trait: null,
     attributes: {
       pace: 50,
       shooting: 35,
@@ -45,6 +44,8 @@ export const STARTER_CREW: Crew = [
   {
     id: "starter-back-2",
     name: "Priya Nair",
+    rarity: "gray",
+    trait: null,
     attributes: {
       pace: 55,
       shooting: 40,
@@ -58,6 +59,8 @@ export const STARTER_CREW: Crew = [
   {
     id: "starter-forward-1",
     name: "Jonas Berg",
+    rarity: "gray",
+    trait: null,
     attributes: {
       pace: 70,
       shooting: 65,
@@ -71,6 +74,8 @@ export const STARTER_CREW: Crew = [
   {
     id: "starter-forward-2",
     name: "Tayo Adeyemi",
+    rarity: "gray",
+    trait: null,
     attributes: {
       pace: 60,
       shooting: 70,

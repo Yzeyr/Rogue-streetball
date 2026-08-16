@@ -9,9 +9,48 @@
     <div id="app">
       <section id="screen-home" class="screen">
         <h1>Rogue Streetball</h1>
+        <div id="currency-row">
+          <span class="currency"><span class="currency-icon coins">C</span> <span id="home-coins">0</span></span>
+          <span class="currency"><span class="currency-icon gems">G</span> <span id="home-gems">0</span></span>
+        </div>
         <p class="subtitle">Your crew</p>
         <ul id="crew-list"></ul>
+        <div id="home-nav">
+          <button id="nav-squad">Squad</button>
+          <button id="nav-market">Market</button>
+          <button id="nav-buffs">Buffs</button>
+        </div>
         <button id="start-run" class="primary">Start run</button>
+      </section>
+
+      <section id="screen-buffs" class="screen" hidden>
+        <h2>Permanent buffs</h2>
+        <p class="subtitle">
+          <span class="currency-icon gems">G</span> <span id="buffs-gems">0</span> — spent once, kept forever
+        </p>
+        <div id="buffs-list"></div>
+        <button id="buffs-back">Back</button>
+      </section>
+
+      <section id="screen-squad" class="screen" hidden>
+        <h2>Squad</h2>
+        <p class="subtitle">Tap a card to fill the next open slot</p>
+        <div id="squad-slots"></div>
+        <div id="squad-collection" class="card-grid"></div>
+        <div class="row-buttons">
+          <button id="squad-back">Back</button>
+          <button id="squad-save" class="primary">Save squad</button>
+        </div>
+      </section>
+
+      <section id="screen-market" class="screen" hidden>
+        <h2>Market</h2>
+        <p class="subtitle">
+          <span class="currency-icon coins">C</span> <span id="market-coins">0</span> — the deliberate-choice
+          counterpart to packs
+        </p>
+        <div id="market-listing" class="card-grid"></div>
+        <button id="market-back">Back</button>
       </section>
 
       <section id="screen-match" class="screen" hidden>
@@ -19,8 +58,8 @@
           <div id="score">0 – 0</div>
           <div id="controls">
             <button id="speed-1x">1x</button>
-            <button id="speed-4x">4x</button>
-            <button id="simulate-instant">Sim to result</button>
+            <button id="speed-3x">3x</button>
+            <button id="simulate-instant">Skip</button>
           </div>
         </div>
         <p id="match-status" class="subtitle"></p>
@@ -35,6 +74,13 @@
         <button id="continue-btn" class="primary">Continue</button>
       </section>
 
+      <section id="screen-pack" class="screen" hidden>
+        <h2 id="pack-title"></h2>
+        <div id="pack-cards" class="card-grid"></div>
+        <p id="pack-dupes" class="subtitle"></p>
+        <button id="pack-continue" class="primary">Continue</button>
+      </section>
+
       <section id="screen-draft" class="screen" hidden>
         <h2>Pick a perk</h2>
         <p class="subtitle">Applies to the whole crew, for the rest of the run</p>
@@ -45,7 +91,7 @@
         <h2>Run over</h2>
         <p id="run-over-detail" class="subtitle"></p>
         <p id="run-over-stats"></p>
-        <button id="new-run-btn" class="primary">Start new run</button>
+        <button id="new-run-btn" class="primary">Back to home</button>
       </section>
     </div>
     <script type="module" src="/src/main.ts"></script>

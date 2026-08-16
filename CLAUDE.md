@@ -180,46 +180,88 @@ Use these consistently.
 - `src/render/` — `renderer.ts` draws `MatchState` to a Canvas 2D context
   (walls, goal mouths, ball, players as blobs); `loop.ts` is an
   accumulator-driven fixed-timestep loop decoupling playback speed from
-  wall-clock frame rate (1x/4x buttons wired in `main.ts`). Landscape,
-  goals left/right.
-- `src/meta/` — the roguelike layer, now with real cup structure.
-  `crew.ts` has a hand-authored 5-player `STARTER_CREW` (named, not
-  rolled) feeding the sim's `PlayerAttributes`; `perks.ts` is a small
-  hand-authored Perk pool applied crew-wide; `opponent.ts` generates a
-  rival squad (its own `Math.random()`-seeded stream, not the sim's —
-  see decision log); `cup.ts` implements the settled 5-round shape
-  (two-legged aggregate ties, boss round, sudden-death tie-break) as a
-  pure state machine (`advanceCup`/`resolveSuddenDeath`) that a screen
-  layer drives; `run.ts`'s `RunState` now carries real cup progress,
-  `cupsCleared`, and a placeholder `coins` reward (packs don't exist
-  yet, so Coins stand in for the real milestone reward for now).
-- `src/main.ts` drives the full screen flow: home (crew list, "Start
-  run") → match (status line shows round/leg or "Boss"/"Sudden death")
-  → result (leg complete / tie won / cup cleared / sudden death needed)
-  → draft (pick 1 of 3 Perks, skipped before a sudden-death decider) →
-  next match — looping through an entire cup and chaining into the next
-  one on a clear, until a lost tie or the boss ends the run outright,
-  landing on a distinct Run Over screen with final stats and "Start new
-  run." Verified via both live UI automation (leg completion, round
-  advancement, sudden death triggering and resolving, aggregate and
-  sudden-death losses, all with no console errors) and direct unit
-  checks of the state machine (boss win/loss/draw-then-sudden-death,
-  milestone reward scaling across cup clears).
+  wall-clock frame rate. Landscape, goals left/right.
+- `src/meta/` — the roguelike layer. This grew substantially in one pass
+  (explicit invitation: "finish the game from here, I trust your
+  decisions"), prioritising the core meta-progression loop over the
+  remaining sim systems (fouls/tactics/hazards/subs/sprites) and the
+  lower-priority acquisition channels (Academy/Scouting/Altar/Legends) —
+  see the trailing note on that call below.
+  - `playerCard.ts` — `PlayerCard` (name, rarity, attributes, an optional
+    `Trait`), the five-tier rarity ladder, and `generatePlayerCard`
+    (rolls attributes within a rarity's stat band, then a trait chance
+    scaling with rarity — a trait is a named bonus to one attribute,
+    deliberately simple rather than sim-aware special-casing).
+  - `pack.ts` — `openPack` (3 cards, rarity gated by pack tier per the
+    settled Bronze/Silver/Gold odds) and `packTierForCupClear` (1st
+    clear → Bronze, 2nd → Silver, 3rd+ → Gold). This is now the real
+    milestone reward, replacing the placeholder Coins from before.
+  - `profile.ts` — `PlayerProfile`: the actual "most progress" that
+    persists (collection, Coins, Gems, lifetime cups-cleared stat, which
+    5 card ids form the active squad, owned permanent buffs), saved to
+    `localStorage` on every mutation. `addCardsToCollection` is where
+    duplicate-pull-to-Coins actually happens now (name-based duplicate
+    detection — see the naming note below).
+  - `market.ts` — a visible, rotating 4-card listing priced by rarity;
+    buying adds straight to the collection. The deliberate-choice
+    counterpart to blind packs, as settled.
+  - `buffs.ts` — a small (2-item) permanent-buff catalog spendable with
+    Gems, applied once at run start (`applyStartingBuffs`) rather than
+    re-applied like a Perk.
+  - `crew.ts` — `STARTER_CREW` is now 5 hand-authored `PlayerCard`s (Gray,
+    no trait) that seed a fresh profile's collection, rather than being
+    the sole, permanent crew source.
+  - `opponent.ts` — generates a rival squad on its own `Math.random()`
+    stream, not the sim's (see decision log on why).
+  - `cup.ts` — the settled 5-round shape (two-legged aggregate ties,
+    boss round, sudden-death tie-break) as a pure state machine
+    (`advanceCup`/`resolveSuddenDeath`), now returning which pack tier
+    was earned on a clear rather than touching currency itself — cup
+    progress stays free of collection/currency concerns by design.
+  - `perks.ts`/`run.ts` — unchanged in shape from the vertical slice:
+    Perks are still a small hand-authored pool applied crew-wide;
+    `RunState` carries cup progress and resets on loss, distinct from
+    the persistent `PlayerProfile`.
+- `src/main.ts` now drives eight screens: **Home** (currencies, crew
+  list, nav to Squad/Market/Buffs, "Start run") → **Squad** (tap cards
+  from the full collection into 5 GK/DEF/DEF/FWD/FWD slots, save) /
+  **Market** (buy a visible card with Coins) / **Buffs** (spend Gems on
+  a permanent buff) from Home → **Match** (status line: round/leg,
+  "Boss", or "Sudden death"; 1x/3x/Skip controls) → **Result**
+  (contextual: leg complete / tie won / cup cleared / sudden death
+  needed) → **Pack** (reveals a cleared cup's 3 cards, notes any
+  duplicates converted to Coins) → **Draft** (pick 1 of 3 Perks) → next
+  match, chaining cups on a clear until a loss lands on **Run Over**
+  (final stats, Gems awarded for cups cleared this run, "Back to home").
+  Verified end-to-end via live UI automation (multiple full runs through
+  every branch — leg completion, round advancement, sudden death, both
+  loss paths, pack reveals, zero console errors), direct unit checks for
+  branches random play didn't hit (boss win/loss/drawn-then-sudden-death,
+  reward-tier scaling, duplicate-to-Coins conversion math, buff
+  purchase/gems math), and a persistence check confirming the exact same
+  collection survives a full page reload.
 - Team size (5) and court dimensions are `MatchConfig`/`CourtConfig` data,
   not baked-in constants; the formation builder is generic in team size too.
 
-**Explicitly stubbed, not decided yet:** cup access (no choice between
-2-3 next cups yet — clearing a cup always starts a fresh one
-immediately). No packs, Market, rarity, or Player Cards — the crew is
-one fixed hand-authored roster, no acquisition system, and the milestone
-reward is placeholder Coins rather than a real Pack. No persistence (a
-page refresh loses the run). No court variety — two-legged ties are
-structurally real (aggregate, alternating conceptual "home"), but every
-leg still plays on the same `DEFAULT_COURT`, so the settled "different
-court per leg" flavour isn't visible yet. No rush-keeper behaviour
-(keeper never pushes forward — waiting on the Tactic system). No fouls
-(tackling can fail, but nothing stops play on a mistimed one yet).
-Tactics, power-ups, and substitutions aren't built.
+**Naming simplification, not yet reconciled with the decision log:**
+Player Card "duplicate" detection is name-based (same name = same person,
+matching an existing collection entry converts to Coins instead of being
+added) rather than tracking a fixed roster of specific identities — names
+are drawn from a ~30×30 first/last pool, so collisions do happen and grow
+more likely as the collection grows, but it's not the same mechanic as a
+FUT-style fixed card catalog. Worth a look if that distinction matters.
+
+**Explicitly stubbed, not built:** cup access (no choice between 2-3 next
+cups — clearing one always starts a fresh cup immediately). Youth
+Academy, Scouting, and Altar (crafting) — all confirmed in scope in the
+decision log, none built; Market covers the "deliberate choice"
+acquisition need for now. Legends (stats screen) not built. No court
+variety — every leg still plays `DEFAULT_COURT`, so "different court per
+leg" isn't visible yet. No rush-keeper behaviour, no fouls, no tactics,
+no in-match power-ups, no substitutions. No sprites (still wobbly blobs).
+Player rarity is currently cosmetic-plus-stats only — no sim-side
+trait special-casing (a trait is a flat attribute bonus baked into the
+roll, not contextual behaviour like "rarely loses the ball at a wall").
 
 ## 9. Decision log
 
@@ -663,14 +705,66 @@ them land wrong, nothing here is precious.
   that was actually lost on aggregate). Fixed in `advanceCup`, and the
   Run Over screen now shows the aggregate for a tie loss rather than
   just the deciding leg's own score.
+- **Core meta-progression loop implemented: Player Cards, packs, rarity,
+  Squad/Market/Buffs screens, persistence.** At explicit invitation
+  ("finish the game from here, I trust your decisions"), rather than
+  attempt every remaining system in one pass, prioritised whatever turns
+  "one fixed crew forever" into an actual roguelike — that's this loop —
+  over fouls/tactics/hazards/substitutions/sprites and the lower-priority
+  acquisition channels. See section 8 for the full file-by-file rundown;
+  the calls worth recording here:
+  - **Rarity is stats-plus-a-trait, where a Trait is a flat attribute
+    bonus** (e.g. "Sharpshooter" = +15 Shooting), applied on top of a
+    rarity-banded roll so a trait can push past that band's normal
+    ceiling. This is a deliberate simplification of the settled "rarity
+    grants a specialised trait" decision — no sim-side special-casing
+    (no "rarely loses the ball at a wall" contextual behaviour), just a
+    bigger number in one stat. Flagged in section 8 as worth a look
+    later if traits are meant to be more than that.
+  - **Duplicate detection is name-based**, not a fixed roster of known
+    identities — names are drawn from a ~30×30 first/last pool, so two
+    pulls can coincidentally share a name (and grow more likely to as
+    the collection grows), and that's what "duplicate" means here. This
+    is a simplification of the FUT-style "same specific player again"
+    mental model the original decision was written against — flagged in
+    section 8, not silently equated with it.
+  - **Coins and Gems moved off `RunState` onto the persistent
+    `PlayerProfile`**, since they're explicitly things that carry
+    between runs (decision log: Coins/Gems, "most progress"). The
+    milestone reward changed from placeholder Coins to an actual Pack —
+    `cup.ts`'s state machine now returns which pack tier was earned
+    rather than crediting currency itself, keeping cup progress free of
+    collection/currency concerns.
+  - **Gems earned on Run Over**, scaling with cups cleared that run (5
+    per cup — a number, not a locked balance figure). Spendable on a
+    small 2-item permanent-buff catalog (+3 all attributes to every
+    run's starting squad; +50% Coins from duplicate pulls), applied once
+    at run start rather than re-applied like a Perk.
+  - **Speed controls aligned to the settled 1x/3x/skip** (previously
+    1x/4x plus a separately-labelled "Sim to result" button).
+  **Verified thoroughly:** full live UI automation runs through every
+  branch (multiple complete runs hitting leg completion, round
+  advancement, sudden death, both loss paths, pack reveals — zero
+  console errors), direct unit checks for the branches random play
+  didn't happen to hit (duplicate-to-Coins conversion awarding the right
+  amount for the right rarity, buff purchase deducting Gems and
+  recording ownership correctly), and an explicit reload test confirming
+  the exact same collection (by card id) survives a full page refresh.
+  **Deliberately not attempted in this pass, not silently dropped:**
+  Youth Academy, Scouting, and Altar (crafting) — all confirmed in scope
+  in the decision log, none built; Market covers the "deliberate choice"
+  need for now, Altar's exact ratio was never locked anyway (see the
+  still-open item below). Legends (stats screen). Court variety, fouls,
+  tactics, in-match power-ups, substitutions, sprites, cup access choice
+  (2-3 next cups) — each flagged in its own decision-log entry earlier as
+  a real system in its own right, not rushed into this pass alongside
+  everything else.
 
 ## 10. Open questions
 
 Unresolved. Do not build against these until they're decided and moved to
 section 9.
 
-- **Catalog of permanent Gem-bought buffs.** Spend category is settled
-  (cross-run meta-progression); the actual list of buffs isn't.
 - **Altar sacrifice ratio, and whether the crafted card is random or
   chosen.** Direction is settled (N same-tier cards → 1 guaranteed card
   at the tier above); the ratio and randomness aren't locked.
