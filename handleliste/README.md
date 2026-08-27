@@ -26,6 +26,27 @@ For ekte, delt liste:
 | `npm run dev:mock` | dev-server med datalaget i minnet, 6 middager, ingen database |
 | `npm test` | enhetstester for navne- og mengdesammenslåing |
 | `npm run build` | typesjekk + produksjonsbygg til `dist/` |
+| `npm run build:single` | alt inn i én fil: `single/handleliste.html` |
+
+## Legge den ut på GitHub Pages
+
+`single/handleliste.html` er hele appen i én fil — CSS og JS limt inn, ingen
+eksterne kall. Den ligger ferdig bygget i repoet, så den kan lastes opp som
+den er.
+
+1. Lag et nytt repo (eller bruk et du har).
+2. Last opp fila og døp den om til `index.html`.
+3. Settings → Pages → Deploy from a branch → `main` / `root`.
+4. Åpne adressen på begge telefonene og lim inn Supabase-nøklene.
+
+Nøklene spørres om i appen og lagres i `localStorage` på hver telefon, så
+fila trenger ikke bygges på nytt når dere har opprettet prosjektet. Vil du
+heller bake dem inn ved bygging, legg dem i `.env` før `npm run build:single`
+— da hopper appen rett til lista.
+
+På telefonen: «Legg til på Hjem-skjerm» gir et ikon som åpner uten
+nettleserfelt. Det er ikke en full PWA — den trenger nett for å snakke med
+Supabase.
 
 ## Skjermbilder av flyten
 

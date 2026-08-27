@@ -1,16 +1,24 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { loadConfig } from './config.ts';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-
-/** Om .env er fylt ut. Appen viser en oppsettskjerm i stedet for å krasje. */
-export const hasSupabaseConfig = Boolean(url && anonKey);
+let cached: SupabaseClient | null = null;
 
 /**
- * Realtime er skrudd ned til 5 hendelser/sekund. Vi henter uansett hele
- * lista på nytt ved endring, så høyere frekvens gir bare flere runder.
+ * Realtime er skrudd ned til 5 hendelser/sekund. Vi henter uansett hele lista
+ * på nytt ved endring, så høyere frekvens gir bare flere runder.
  */
-export const supabase: SupabaseClient = createClient(url ?? 'http://localhost', anonKey ?? 'anon', {
-  auth: { persistSession: false },
-  realtime: { params: { eventsPerSecond: 5 } },
-});
+export function getClient(): SupabaseClient {
+  if (cached !== null) return cached;
+  const config = loadConfig();
+  if (config === null) throw new Error('Supabase er ikke satt opp ennå.');
+  cached = createClient(config.url, config.anonKey, {
+    auth: { persistSession: false },
+    realtime: { params: { eventsPerSecond: 5 } },
+  });
+  return cached;
+}
+
+/** Kalles når nøklene endres, så neste kall bygger en ny klient. */
+export function resetClient(): void {
+  cached = null;
+}

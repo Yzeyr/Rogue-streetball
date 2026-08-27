@@ -12,7 +12,9 @@ import { normalizeName } from './normalize.ts';
 import { normalizeUnit } from './units.ts';
 import type { Category, Meal, MealIngredient, Quantity, ShoppingItem, WeekPlanItem } from './types.ts';
 
-export const isConfigured = true;
+export function isConfigured(): boolean {
+  return true;
+}
 
 let nextId = 0;
 const id = (): string => `mock-${(nextId += 1)}`;

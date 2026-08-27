@@ -5,6 +5,9 @@ import type { Actions, AppState } from './state.ts';
 import { createListView } from './views/list.ts';
 import { createMealsView } from './views/meals.ts';
 import { createWeekView } from './views/week.ts';
+import { createSetupView } from './views/setup.ts';
+import { clearConfig, isConfigFixed } from './lib/config.ts';
+import { resetClient } from './lib/supabase.ts';
 
 type TabId = 'liste' | 'middager' | 'uke';
 
@@ -17,10 +20,22 @@ const TABS: { id: TabId; label: string }[] = [
 const root = document.querySelector<HTMLDivElement>('#app');
 if (root === null) throw new Error('Fant ikke #app');
 
-if (!db.isConfigured) {
-  renderSetupHelp(root);
-} else {
-  void start(root);
+boot(root);
+
+function boot(container: HTMLElement): void {
+  if (!db.isConfigured()) {
+    replaceChildren(container, [
+      el('header', { class: 'app-header' }, [el('h1', { text: 'Handleliste' })]),
+      el('main', { class: 'content' }, [
+        createSetupView(() => {
+          resetClient();
+          boot(container);
+        }),
+      ]),
+    ]);
+    return;
+  }
+  void start(container);
 }
 
 async function start(container: HTMLElement): Promise<void> {
@@ -142,12 +157,37 @@ async function start(container: HTMLElement): Promise<void> {
   }
 
   setTab('liste');
+  // Et tregt eller feil prosjekt bruker flere sekunder på å feile (klienten
+  // prøver på nytt et par ganger), så det må synes at noe skjer.
+  showStatus('Kobler til …');
 
   try {
     state.meals = await db.fetchMeals();
     await reload();
   } catch (error) {
     showStatus(error instanceof Error ? error.message : 'Klarte ikke å hente data', true);
+    replaceChildren(content, [
+      el('section', { class: 'view' }, [
+        el('h2', { text: 'Får ikke kontakt med databasen' }),
+        el('p', {
+          text:
+            'Sjekk at prosjektet lever, at begge SQL-filene er kjørt, og at nøklene er riktige.',
+        }),
+        !isConfigFixed() &&
+          el('button', {
+            class: 'primary wide',
+            text: 'Endre nøkler',
+            attrs: { type: 'button' },
+            on: {
+              click: () => {
+                clearConfig();
+                resetClient();
+                boot(container);
+              },
+            },
+          }),
+      ]),
+    ]);
     return;
   }
 
@@ -155,22 +195,4 @@ async function start(container: HTMLElement): Promise<void> {
   db.subscribeToChanges(() => {
     void reload().catch(() => showStatus('Mistet kontakt med databasen', true));
   });
-}
-
-function renderSetupHelp(container: HTMLElement): void {
-  replaceChildren(container, [
-    el('header', { class: 'app-header' }, [el('h1', { text: 'Handleliste' })]),
-    el('main', { class: 'content' }, [
-      el('section', { class: 'view setup' }, [
-        el('h2', { text: 'Mangler Supabase-oppsett' }),
-        el('p', {
-          text:
-            'Lag et gratis prosjekt på supabase.com, kjør SQL-filene i supabase/-mappa, ' +
-            'og legg nøklene i en .env-fil ved siden av package.json:',
-        }),
-        el('pre', { text: 'VITE_SUPABASE_URL=https://xxxx.supabase.co\nVITE_SUPABASE_ANON_KEY=eyJ...' }),
-        el('p', { text: 'Start deretter dev-serveren på nytt.' }),
-      ]),
-    ]),
-  ]);
 }
