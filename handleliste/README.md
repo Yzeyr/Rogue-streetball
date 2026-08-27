@@ -8,10 +8,29 @@ fotballspillet i rotmappa.
 
 ## Kom i gang
 
+```
+npm install
+npm run dev:mock     # prøv appen med jukse-data, uten Supabase
+```
+
+For ekte, delt liste:
+
 1. Lag et gratis prosjekt på [supabase.com](https://supabase.com).
 2. SQL Editor → kjør `supabase/01_schema.sql`, deretter `supabase/02_seed_meals.sql`.
 3. `cp .env.example .env` og fyll inn URL + anon key fra Project Settings → API.
-4. `npm install && npm run dev`
+4. `npm run dev`
+
+| kommando | hva |
+|---|---|
+| `npm run dev` | dev-server mot Supabase |
+| `npm run dev:mock` | dev-server med datalaget i minnet, 6 middager, ingen database |
+| `npm test` | enhetstester for navne- og mengdesammenslåing |
+| `npm run build` | typesjekk + produksjonsbygg til `dist/` |
+
+## Skjermbilder av flyten
+
+Middager → «+ Uke» på de du vil ha → fanen Uke viser nøyaktig hvilke linjer
+som kommer på lista, med sammenslåtte mengder → «Legg til i handleliste».
 
 ## Datamodell
 
@@ -105,10 +124,31 @@ som flere elementer i `quantities` på **samme rad**, og vises som
 **5. Mengde uten tall.** `amount = null` ("etter smak") legger seg på lista
 uten mengde og blokkerer ikke sammenslåing av de andre bidragene.
 
-Sammenslåingen skjer i klienten: les eksisterende rad på `normalized_name`,
-slå sammen, skriv tilbake. Den unike indeksen er sikkerhetsnettet — hvis
-dere skulle treffe samtidig, feiler den ene innsettingen og prøver på nytt
-mot raden som nå finnes.
+Sammenslåingen skjer i klienten (`src/lib/merge.ts`): les eksisterende rad på
+`normalized_name`, slå sammen, skriv tilbake. Den unike indeksen er
+sikkerhetsnettet — hvis dere skulle treffe samtidig, feiler den ene
+innsettingen med `23505`, og `db.ts` leser da på nytt og fletter mot raden
+som nå finnes.
+
+En vare som allerede er huket av, blir haket av igjen når det legges til mer
+av den. Trenger dere mer melk enn dere alt har krysset ut, må det synes at
+det står igjen å handle.
+
+Reglene er dekket av enhetstester (`npm test`) — blant annet eksempelet fra
+kravlista: 3 dl + 2 dl helmelk blir én linje med 5 dl, og «helmelk» + «H-melk»
+regnes som samme vare.
+
+## Filer
+
+```
+src/lib/normalize.ts   navn -> nøkkel, med synonymtabell
+src/lib/units.ts       enheter, omregning, visningsformat
+src/lib/merge.ts       all sammenslåingslogikk (ren, uten database)
+src/lib/merge.test.ts  19 tester av det over
+src/lib/db.ts          Supabase-kall og realtime
+src/lib/db.mock.ts     samme API i minnet, for npm run dev:mock
+src/views/             liste, middager, uke
+```
 
 ## Realtime
 
